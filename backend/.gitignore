@@ -1,0 +1,6 @@
+backend/venv/
+frontend/node_modules/
+__pycache__/
+.env
+uploads/
+.DS_Store
