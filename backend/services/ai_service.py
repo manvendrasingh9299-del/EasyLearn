@@ -1,21 +1,20 @@
-def generate_summary(text: str):
+import requests
 
-    topic = text[:80].replace("\n", " ")
+OLLAMA_URL = "http://localhost:11434/api/generate"
+MODEL = "mistral:instruct"
 
-    return {
-        "topic": topic,
-        "important_points": [
-            "Academic content extracted",
-            "Structured processing applied",
-            "Revision-friendly format generated"
-        ],
-        "key_concepts": [
-            "Concept A",
-            "Concept B",
-            "Concept C"
-        ],
-        "simple_explanation": "This document explains academic concepts in structured form.",
-        "exam_summary": "Focus on definitions, core ideas, and structured bullet points."
+
+def generate_summary(prompt: str):
+
+    payload = {
+        "model": MODEL,
+        "prompt": prompt,
+        "stream": False
     }
 
+    response = requests.post(OLLAMA_URL, json=payload)
+
+    result = response.json()
+
+    return result["response"]
     

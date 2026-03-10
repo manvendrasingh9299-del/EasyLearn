@@ -1,6 +1,6 @@
 # services/chunk_service.py
 
-def chunk_text(text: str, chunk_size: int = 1000):
+def chunk_text(text: str, chunk_size: int = 500):
     words = text.split()
     chunks = []
 

@@ -1,5 +1,5 @@
 # services/pipeline_service.py
-
+import os
 from services.pdf_service import extract_text_from_pdf
 from services.chunk_service import chunk_text
 from services.ai_service import generate_summary
@@ -23,6 +23,7 @@ Content:
 
 
 async def process_pdf(file_path: str):
+
     # Step 1: Extract text
     text = extract_text_from_pdf(file_path)
 
@@ -44,5 +45,8 @@ async def process_pdf(file_path: str):
     await summary_collection.insert_one({
         "summary": final_output
     })
+
+    # Step 6: Delete uploaded file
+    os.remove(file_path)
 
     return final_output

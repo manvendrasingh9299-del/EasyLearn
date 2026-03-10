@@ -13,11 +13,18 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.post("/upload")
 async def upload_pdf(file: UploadFile = File(...)):
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
 
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    try:
 
-    result = await process_pdf(file_path)
+        file_path = os.path.join(UPLOAD_DIR, file.filename)
 
-    return {"summary": result}
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        result = await process_pdf(file_path)
+
+        return {"summary": result}
+
+    except Exception as e:
+        return {"error": str(e)}
+        
