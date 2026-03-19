@@ -1,6 +1,33 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 
 const API = "http://127.0.0.1:8000/api/v1";
+/* ─── Mascot image component ─────────────────────────────────────────────── */
+const MASCOT = {
+  idle:       '/mascot/idle.gif',
+  processing: '/mascot/processing.gif',
+  reading:    '/mascot/reading.jpg',
+  welcome:    '/mascot/welcome.gif',
+  sleeping:   '/mascot/sleeping.jpg',
+  confused:   '/mascot/confused.gif',
+};
+
+function Mascot({ pose = 'idle', size = 120, style = {} }) {
+  return (
+    <img
+      src={MASCOT[pose]}
+      alt={pose + ' mascot'}
+      style={{
+        width: size,
+        height: size,
+        objectFit: 'contain',
+        imageRendering: 'auto',
+        ...style,
+      }}
+    />
+  );
+}
+
+
 
 /* ─── Global CSS ──────────────────────────────────────────────────────────── */
 const GlobalStyle = () => (
@@ -335,13 +362,17 @@ function UploadPage({ onResult }) {
     }
   };
 
-  if (loading) return <ProcessingPage step={steps[procStep]} fileNames={files.map(f=>f.name)} />;
+  if (loading) return <ProcessingPage step={steps[procStep]} fileNames={files.map(f=>f.name)} procStep={procStep} />;
 
   return (
     <div style={{ position:"relative", zIndex:1 }}>
       <WatercolorBanner />
       <div style={{ maxWidth:720, margin:"0 auto", padding:"48px 24px 80px" }}>
-        {/* Drop zone */}
+        {/* Mascot idle */}
+      <div style={{display:"flex",justifyContent:"flex-end",marginBottom:-20,marginRight:8}}>
+        <Mascot pose="idle" size={100} style={{animation:"float 3s ease infinite"}} />
+      </div>
+      {/* Drop zone */}
         <div
           className="fade-up"
           onClick={() => inputRef.current?.click()}
@@ -420,7 +451,7 @@ function UploadPage({ onResult }) {
 }
 
 /* ─── Processing page ─────────────────────────────────────────────────────── */
-function ProcessingPage({ step, fileNames }) {
+function ProcessingPage({ step, fileNames, procStep = 0 }) {
   return (
     <div style={{
       minHeight:"80vh", display:"flex", flexDirection:"column",
@@ -436,7 +467,12 @@ function ProcessingPage({ step, fileNames }) {
         ))}
       </div>
 
-      <ReadingCharacter />
+      {procStep < 2
+        ? <Mascot pose="processing" size={160} style={{animation:"readingBob 2s ease infinite"}} />
+        : procStep < 4
+        ? <Mascot pose="processing" size={160} style={{animation:"readingBob 1.5s ease infinite"}} />
+        : <Mascot pose="reading" size={160} style={{animation:"float 3s ease infinite"}} />
+      }
 
       <p style={{
         fontFamily:"'Crimson Pro', serif", fontSize:30, fontStyle:"italic",
@@ -536,6 +572,10 @@ function SummaryPage({ data, fileNames, onBack }) {
     <div className="fade-in" style={{ maxWidth:1060, margin:"0 auto", padding:"48px 32px 100px", display:"grid", gridTemplateColumns:"1fr 320px", gap:64 }}>
       {/* ── Left column ── */}
       <div>
+        {/* Reading mascot top right of summary */}
+        <div style={{position:"absolute",top:48,right:32,opacity:0.85}}>
+          <Mascot pose="reading" size={90} style={{animation:"float 4s ease infinite"}} />
+        </div>
         {/* Back + files */}
         <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:32 }}>
           <button onClick={onBack} style={{ background:"none",border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"var(--muted)",padding:0,display:"flex",alignItems:"center",gap:4 }}>
@@ -719,7 +759,7 @@ function HistoryPage({ onOpen }) {
 
       {history.length === 0 ? (
         <div style={{ textAlign:"center", padding:"80px 0" }}>
-          <Doodles.Book size={40} color="#D8CFBF" style={{ marginBottom:16 }} />
+          <Mascot pose="sleeping" size={150} />
           <p style={{ fontFamily:"'Crimson Pro',serif",fontSize:22,fontStyle:"italic",color:"var(--muted)" }}>No uploads yet</p>
           <p style={{ fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"var(--border)",marginTop:8 }}>Your processed documents will appear here</p>
         </div>
@@ -761,9 +801,12 @@ function HistoryPage({ onOpen }) {
 function AboutPage() {
   return (
     <div style={{ maxWidth:620, margin:"80px auto", padding:"0 32px 100px", position:"relative", zIndex:1 }}>
-      <h1 style={{ fontFamily:"'Crimson Pro',serif",fontSize:42,fontWeight:600,fontStyle:"italic",letterSpacing:"-0.03em",marginBottom:32 }}>
-        About EasyLearn
-      </h1>
+      <div style={{display:"flex",alignItems:"center",gap:20,marginBottom:32}}>
+        <Mascot pose="welcome" size={90} style={{animation:"float 4s ease infinite"}} />
+        <h1 style={{ fontFamily:"'Crimson Pro',serif",fontSize:42,fontWeight:600,fontStyle:"italic",letterSpacing:"-0.03em" }}>
+          About EasyLearn
+        </h1>
+      </div>
       {[
         ["What it does","Upload any PDF, photo, or handwritten notes. EasyLearn extracts the text, sends it to a local Mistral AI model, and returns a structured summary with key concepts, a plain-language explanation, exam tips and review flashcards."],
         ["How it works","Your files never leave your machine. Text extraction happens locally — pdfplumber for PDFs, Tesseract OCR for images. Mistral runs via Ollama on your own hardware. Summaries are stored in a local MongoDB database."],
@@ -777,6 +820,22 @@ function AboutPage() {
           <p style={{ fontFamily:"'Crimson Pro',serif",fontSize:18,lineHeight:1.85,color:"var(--ink2)",fontWeight:300 }}>{body}</p>
         </div>
       ))}
+    </div>
+  );
+}
+
+/* ─── Error / 404 component ──────────────────────────────────────────────── */
+function ErrorState({ message = "Something went wrong" }) {
+  return (
+    <div style={{
+      display:"flex",flexDirection:"column",alignItems:"center",
+      justifyContent:"center",padding:"80px 24px",textAlign:"center",
+    }}>
+      <Mascot pose="confused" size={140} style={{marginBottom:20}} />
+      <p style={{fontFamily:"'Crimson Pro',serif",fontSize:24,fontStyle:"italic",color:"var(--ink)",marginBottom:8}}>
+        Oops...
+      </p>
+      <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:14,color:"var(--muted)"}}>{message}</p>
     </div>
   );
 }
