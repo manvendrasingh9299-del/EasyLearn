@@ -9,3 +9,6 @@ pdfplumber==0.10.3
 aiofiles==23.2.1
 httpx==0.27.0
 pytesseract==0.3.13
+python-jose==3.3.0
+passlib==1.7.4
+bcrypt==4.0.1
