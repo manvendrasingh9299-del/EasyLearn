@@ -490,66 +490,67 @@ function UploadPage({ onResult, user }) {
 
 
 /* ─── Processing page ─────────────────────────────────────────────────────── */
+
+
+/* ─── Processing page ─────────────────────────────────────────────────────── */
 function ProcessingPage({ step, procStep = 0, fileNames }) {
   return (
-    <div style={{ minHeight:"80vh", display:"flex", flexDirection:"column",
-      alignItems:"center", justifyContent:"center", gap:20, padding:"40px 24px", position:"relative", zIndex:1 }}>
+    <div style={{
+      minHeight:"92vh",
+      display:"flex",
+      flexDirection:"column",
+      alignItems:"center",
+      justifyContent:"center",
+      gap:28,
+      padding:"40px 24px",
+      position:"relative",
+      zIndex:1,
+    }}>
 
-      {/* Mascot switches between poses */}
-      {procStep < 3
-        ? <Mascot pose="processing" size={160} style={{ animation:"readingBob 2s ease infinite" }} />
-        : <Mascot pose="processing" size={160} style={{ animation:"float 3s ease infinite" }} />
-      }
+      <Mascot pose="processing" size={180} style={{ animation:"readingBob 2.2s ease infinite" }} />
 
-      {/* Step text — italic serif, calm */}
-      <p key={step} style={{ fontFamily:"'Crimson Pro',serif", fontSize:26, fontStyle:"italic",
-        color:"var(--ink2)", letterSpacing:"-0.01em", textAlign:"center",
-        animation:"fadeIn 0.5s ease both" }}>
+      <p key={step} style={{
+        fontFamily:"'Crimson Pro', serif",
+        fontSize:28,
+        fontStyle:"italic",
+        color:"var(--ink2)",
+        letterSpacing:"-0.01em",
+        textAlign:"center",
+        animation:"fadeIn 0.5s ease both",
+        maxWidth:380,
+        lineHeight:1.4,
+      }}>
         {step}
       </p>
 
-      {/* Natural wavy progress bar */}
-      <div style={{ width:300, position:"relative", height:24 }}>
-        <svg width="300" height="24" viewBox="0 0 300 24">
-          {/* Background wavy line */}
-          <path d="M4 12 Q37 6 75 12 Q112 18 150 12 Q187 6 225 12 Q262 18 296 12"
-            fill="none" stroke="var(--border)" strokeWidth="2.5" strokeLinecap="round" />
-          {/* Animated fill line */}
-          <path d="M4 12 Q37 6 75 12 Q112 18 150 12 Q187 6 225 12 Q262 18 296 12"
-            fill="none" stroke="var(--sage)" strokeWidth="2.5" strokeLinecap="round"
-            strokeDasharray="300" strokeDashoffset="300"
-            style={{
-              animation:`progressNatural ${steps_duration(procStep)}s ease-out forwards`,
-              transition:"stroke-dashoffset 1s ease",
-            }} />
-        </svg>
-        {/* Dots for each step */}
-        <div style={{ display:"flex", justifyContent:"space-between", marginTop:4, padding:"0 4px" }}>
-          {[0,1,2,3,4].map(i => (
-            <div key={i} style={{
-              width:6, height:6, borderRadius:"50%",
-              background: i <= procStep ? "var(--sage)" : "var(--border)",
-              transition:"background 0.4s ease",
-            }} />
-          ))}
-        </div>
+      <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:10 }}>
+        <div className="pencil-loader" />
+        <p style={{
+          fontFamily:"'DM Sans', sans-serif",
+          fontSize:11,
+          letterSpacing:"0.2em",
+          color:"var(--muted)",
+          textTransform:"uppercase",
+          animation:"textPulse 2s ease infinite",
+        }}>Loading...</p>
       </div>
 
-      {/* File chips */}
       {fileNames?.length > 0 && (
-        <div style={{ display:"flex", flexWrap:"wrap", gap:6, justifyContent:"center", marginTop:4 }}>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:6, justifyContent:"center" }}>
           {fileNames.map(n => (
-            <span key={n} style={{ padding:"3px 12px", borderRadius:99,
-              border:"1px solid var(--border)", fontSize:12, color:"var(--muted)" }}>{n}</span>
+            <span key={n} style={{
+              padding:"3px 14px",
+              borderRadius:99,
+              border:"1px solid var(--border)",
+              fontSize:12,
+              color:"var(--muted)",
+              fontFamily:"'DM Sans', sans-serif",
+            }}>{n}</span>
           ))}
         </div>
       )}
     </div>
   );
-}
-
-function steps_duration(step) {
-  return [25, 20, 18, 15, 10][step] || 15;
 }
 
 /* ─── Copy helper ─────────────────────────────────────────────────────────── */
