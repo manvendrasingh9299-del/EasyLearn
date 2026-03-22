@@ -19,7 +19,7 @@ An AI-powered study assistant for students. Upload PDFs, photos or handwritten n
   - Quick tips to remember
 - Displays everything in a beautiful warm editorial React UI
 - Saves all summaries to MongoDB for history
-
+- Macot:ducky
 ---
 
 ## Tech Stack
