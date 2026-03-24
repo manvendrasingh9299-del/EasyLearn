@@ -143,22 +143,6 @@ const WavyLine = ({ color = "var(--border)" }) => (
   </svg>
 );
 
-/* ─── Doodles ─────────────────────────────────────────────────────────────── */
-const Doodles = () => (
-  <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:0, overflow:"hidden" }}>
-    {[
-      { top:"18%", left:"6%",  size:14, color:"#D4A843", delay:"0s"   },
-      { top:"42%", left:"4%",  size:10, color:"#C4694A", delay:"1s"   },
-      { top:"22%", right:"6%", size:18, color:"#D4A843", delay:"0.5s" },
-      { top:"65%", right:"10%",size:10, color:"#D4A843", delay:"1.5s" },
-    ].map((s, i) => (
-      <svg key={i} width={s.size} height={s.size} viewBox="0 0 24 24"
-        style={{ position:"absolute", ...s, animation:`float ${3+i*0.5}s ease infinite ${s.delay}`, opacity:0.5 }}>
-        <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" fill={s.color} />
-      </svg>
-    ))}
-  </div>
-);
 
 /* ─── Navbar ──────────────────────────────────────────────────────────────── */
 function Navbar({ page, setPage, user, onLogout }) {
@@ -299,59 +283,9 @@ function AuthPage({ onAuth }) {
   );
 }
 
-/* ─── Calm cloudy sky banner ──────────────────────────────────────────────── */
+/* ─── Banner placeholder ─────────────────────────────────────────────────── */
 function Banner() {
-  return (
-    <div style={{ width:"100%", height:280, overflow:"hidden", position:"relative" }}>
-      <svg viewBox="0 0 1200 280" preserveAspectRatio="xMidYMid slice"
-        width="100%" height="100%" style={{ position:"absolute", inset:0 }}>
-        <rect x="0" y="0" width="1200" height="280" fill="#C4D4DF"/>
-        <rect x="0" y="0" width="1200" height="140" fill="#B8CCDB" opacity="0.5"/>
-        {/* Moon */}
-        <path d="M310 52 Q320 38 332 52 Q322 60 310 52Z" fill="#EEE5B8" opacity="0.9"/>
-        {/* Stars */}
-        {[[420,35],[560,22],[680,40],[800,28],[920,18],[1060,32],[200,28],[150,48]].map(([x,y],i)=>(
-          <circle key={i} cx={x} cy={y} r={1.3} fill="#F0EACC" opacity="0.55"/>
-        ))}
-        {/* Back clouds soft */}
-        <ellipse cx="150"  cy="245" rx="130" ry="40" fill="#EAE2D2" opacity="0.4"/>
-        <ellipse cx="1050" cy="240" rx="120" ry="38" fill="#EAE2D2" opacity="0.4"/>
-        {/* Main cloud layer */}
-        <ellipse cx="0"    cy="285" rx="190" ry="90" fill="#EFE7D7"/>
-        <ellipse cx="100"  cy="270" rx="160" ry="78" fill="#F2EAD8"/>
-        <ellipse cx="200"  cy="278" rx="140" ry="72" fill="#EDE5D4"/>
-        <ellipse cx="120"  cy="260" rx="100" ry="62" fill="#F4ECD8"/>
-        <ellipse cx="300"  cy="282" rx="130" ry="68" fill="#EEE6D4"/>
-        <ellipse cx="420"  cy="276" rx="110" ry="62" fill="#F0E8D4"/>
-        <ellipse cx="520"  cy="285" rx="100" ry="58" fill="#EDE5D2"/>
-        <ellipse cx="600"  cy="290" rx="120" ry="65" fill="#F0E8D4"/>
-        <ellipse cx="700"  cy="278" rx="110" ry="60" fill="#EDE5D2"/>
-        <ellipse cx="800"  cy="282" rx="130" ry="68" fill="#EEE6D2"/>
-        <ellipse cx="900"  cy="272" rx="140" ry="72" fill="#F2EAD6"/>
-        <ellipse cx="1000" cy="280" rx="130" ry="65" fill="#EEE6D2"/>
-        <ellipse cx="1100" cy="275" rx="140" ry="70" fill="#F0E8D4"/>
-        <ellipse cx="1200" cy="285" rx="150" ry="75" fill="#EDE5D0"/>
-        {/* Puffy tops */}
-        <ellipse cx="90"  cy="252" rx="58" ry="50" fill="#F4ECD8"/>
-        <ellipse cx="170" cy="244" rx="52" ry="46" fill="#F6EED8"/>
-        <ellipse cx="420" cy="258" rx="50" ry="44" fill="#F2E8D4"/>
-        <ellipse cx="700" cy="256" rx="52" ry="46" fill="#F0E6D2"/>
-        <ellipse cx="900" cy="250" rx="56" ry="48" fill="#F2E8D4"/>
-        <ellipse cx="1060" cy="254" rx="50" ry="44" fill="#F2EAD6"/>
-        {/* Hand drawn lines on clouds */}
-        <path d="M310 268 Q330 264 350 268" fill="none" stroke="#D4CCC0" strokeWidth="1" opacity="0.4"/>
-        <path d="M740 265 Q760 261 780 265" fill="none" stroke="#D4CCC0" strokeWidth="1" opacity="0.4"/>
-        {/* Fade bottom to cream */}
-        <defs>
-          <linearGradient id="bf" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#F2EDE4" stopOpacity="0"/>
-            <stop offset="100%" stopColor="#F2EDE4" stopOpacity="1"/>
-          </linearGradient>
-        </defs>
-        <rect x="0" y="220" width="1200" height="60" fill="url(#bf)"/>
-      </svg>
-    </div>
-  );
+  return null;
 }
 
 /* ─── Upload page ─────────────────────────────────────────────────────────── */
@@ -523,16 +457,52 @@ function ProcessingPage({ step, procStep = 0, fileNames }) {
         {step}
       </p>
 
-      <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:10 }}>
-        <div className="pencil-loader" />
-        <p style={{
-          fontFamily:"'DM Sans', sans-serif",
-          fontSize:11,
-          letterSpacing:"0.2em",
-          color:"var(--muted)",
-          textTransform:"uppercase",
-          animation:"textPulse 2s ease infinite",
-        }}>Loading...</p>
+      {/* Unique bouncing book loader */}
+      <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:16 }}>
+
+        {/* Three bouncing circles with staggered delay */}
+        <div style={{ display:"flex", gap:14, alignItems:"flex-end", height:40 }}>
+          {[
+            { color:"#C4694A", delay:"0s",    size:12 },
+            { color:"#6B8C6A", delay:"0.18s", size:16 },
+            { color:"#D4A843", delay:"0.36s", size:12 },
+            { color:"#6B8CAE", delay:"0.54s", size:16 },
+            { color:"#C4694A", delay:"0.72s", size:12 },
+          ].map((b, i) => (
+            <div key={i} style={{
+              width:  b.size,
+              height: b.size,
+              borderRadius:"50%",
+              background: b.color,
+              opacity: 0.75,
+              animation:`bubbleUp 1.1s ease infinite`,
+              animationDelay: b.delay,
+            }} />
+          ))}
+        </div>
+
+        {/* Animated ink underline */}
+        <svg width="160" height="12" viewBox="0 0 160 12">
+          <path
+            d="M4 8 Q40 3 80 8 Q120 13 156 8"
+            fill="none"
+            stroke="var(--border)"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M4 8 Q40 3 80 8 Q120 13 156 8"
+            fill="none"
+            stroke="var(--sage)"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeDasharray="200"
+            style={{
+              animation:"inkWrite 2.4s ease infinite",
+            }}
+          />
+        </svg>
+
       </div>
 
       {fileNames?.length > 0 && (
@@ -749,8 +719,7 @@ function SummaryPage({ data, fileNames, onBack }) {
           <div style={{ marginBottom:8 }}>
             {tips.split("\n").filter(l=>l.trim()).map((t,i)=>(
               <div key={i} style={{ display:"flex",gap:10,marginBottom:12,alignItems:"flex-start" }}>
-                <span style={{ color:"var(--yellow)",fontSize:14,marginTop:3,flexShrink:0,fontFamily:"serif" }}>✦</span>
-                <span style={{ fontFamily:"'Crimson Pro',serif",fontSize:17,lineHeight:1.7,
+                                <span style={{ fontFamily:"'Crimson Pro',serif",fontSize:17,lineHeight:1.7,
                   color:"var(--ink2)",fontWeight:300 }}>
                   {t.replace(/^[-*•\d.★]+\s*/,"")}
                 </span>
@@ -892,8 +861,7 @@ function HistoryPage({ onOpen }) {
       <div style={{ display:"flex",alignItems:"center",gap:12,marginBottom:40 }}>
         <h1 style={{ fontFamily:"'Crimson Pro',serif",fontSize:38,fontWeight:600,
           fontStyle:"italic",letterSpacing:"-0.03em" }}>Past uploads</h1>
-        <span style={{ color:"var(--yellow)",fontSize:18 }}>★</span>
-      </div>
+              </div>
       {history.length === 0 ? (
         <div style={{ textAlign:"center",padding:"60px 0" }}>
           <Mascot pose="sleeping" size={160} />
@@ -1068,7 +1036,6 @@ export default function App() {
   return (
     <>
       <GlobalStyle />
-      <Doodles />
       <div style={{ position:"relative", zIndex:1, minHeight:"100vh" }}>
         <Navbar page={page} setPage={setPage} user={user} onLogout={handleLogout} />
         {page === "login"   && <AuthPage onAuth={handleAuth} />}
