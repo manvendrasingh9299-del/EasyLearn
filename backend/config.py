@@ -11,7 +11,7 @@ DATABASE_NAME: str = os.getenv("DATABASE_NAME", "easylearn_db")
 
 # Ollama / AI
 OLLAMA_URL: str = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
-AI_MODEL: str = os.getenv("AI_MODEL", "mistral:instruct")
+AI_MODEL: str = os.getenv("AI_MODEL", "llama3.2:3b")
 
 # File upload
 UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "uploads")
