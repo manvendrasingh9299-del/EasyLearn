@@ -35,9 +35,9 @@ const GlobalStyle = ({ dark }) => (
     *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
 
     :root {
-      --cream:  ${dark ? "#0F1829" : "#F2EDE4"};
-      --cream2: ${dark ? "#151F35" : "#EDE7DC"};
-      --paper:  ${dark ? "#1A2540" : "#FAF7F2"};
+      --cream:  ${dark ? "#0F1829" : "#EEE6D6"};
+      --cream2: ${dark ? "#151F35" : "#E6DCCB"};
+      --paper:  ${dark ? "#1A2540" : "#FBF8F2"};
       --ink:    ${dark ? "#E8E0D0" : "#2C2416"};
       --ink2:   ${dark ? "#B8A99A" : "#5C5040"};
       --muted:  ${dark ? "#6B7FA0" : "#9C8E7E"};
@@ -46,7 +46,7 @@ const GlobalStyle = ({ dark }) => (
       --sage:   ${dark ? "#7BB87A" : "#6B8C6A"};
       --dusty:  ${dark ? "#7BAED4" : "#6B8CAE"};
       --yellow: ${dark ? "#E8C060" : "#D4A843"};
-      --nav-bg: ${dark ? "rgba(15,24,41,0.92)" : "rgba(242,237,228,0.92)"};
+      --nav-bg: ${dark ? "rgba(15,24,41,0.92)" : "rgba(238,230,214,0.92)"};
     }
 
     html { scroll-behavior:smooth; }
@@ -66,13 +66,13 @@ const GlobalStyle = ({ dark }) => (
         background-size: auto, auto, auto, 28px 28px;
         background-attachment: fixed;
       ` : `
-        background-color: #F2EDE4;
+        background-color: #EEE6D6;
         background-image:
-          radial-gradient(circle at 75% 8%,  rgba(196,105,74,0.11)  0%, transparent 42%),
-          radial-gradient(circle at 12% 82%, rgba(107,140,106,0.09) 0%, transparent 38%),
-          radial-gradient(circle at 88% 72%, rgba(212,168,67,0.07)  0%, transparent 32%),
-          radial-gradient(#C4B89E 0.85px, transparent 0.85px);
-        background-size: auto, auto, auto, 28px 28px;
+          radial-gradient(ellipse at 18% 14%, rgba(196,105,74,0.18)  0%, transparent 48%),
+          radial-gradient(ellipse at 88% 10%, rgba(212,168,67,0.14)  0%, transparent 42%),
+          radial-gradient(ellipse at 6%  78%, rgba(107,140,106,0.13) 0%, transparent 44%),
+          radial-gradient(ellipse at 92% 85%, rgba(196,105,74,0.10)  0%, transparent 38%),
+          radial-gradient(ellipse at 50% 50%, rgba(245,235,210,0.55) 0%, transparent 70%);
         background-attachment: fixed;
       `}
     }
@@ -921,49 +921,89 @@ function SummaryPage({ data, fileNames, onBack }) {
             <QuizPanel concepts={concepts} points={points} />
           ) : (
             <>
+              {/* ── Simple Explanation card ── */}
               <SLabel text="Simple Explanation" />
-              <div style={{ fontFamily:"'Crimson Pro',serif",fontSize:18,lineHeight:1.85,
-                color:"var(--ink2)",fontWeight:300,marginBottom:8 }}>
-                {explanation.split("\n\n").map((p,i)=><p key={i} style={{marginBottom:14}}>{p}</p>)}
+              <div style={{
+                background:"var(--paper)", border:"1px solid var(--border)",
+                borderRadius:16, padding:"24px 28px", marginBottom:32,
+                borderLeft:"4px solid var(--sage)",
+              }}>
+                {explanation.split("\n\n").filter(p=>p.trim()).map((p,i) => (
+                  <p key={i} style={{
+                    fontFamily:"'DM Sans',sans-serif", fontSize:15, lineHeight:1.8,
+                    color:"var(--ink2)", fontWeight:400, marginBottom: i < explanation.split("\n\n").length-1 ? 14 : 0,
+                  }}>{p.trim()}</p>
+                ))}
               </div>
-              <WavyLine />
 
+              {/* ── Exam Summary card ── */}
               <SLabel text="Exam Summary" />
-              <div style={{ fontFamily:"'Crimson Pro',serif",fontSize:18,lineHeight:1.85,
-                color:"var(--ink2)",fontWeight:300,marginBottom:8 }}>
-                {examSummary.split("\n\n").map((p,i)=><p key={i} style={{marginBottom:14}}>{p}</p>)}
-              </div>
-              <WavyLine />
-
-              {tips && <>
-                <SLabel text="Quick Tips" />
-                <div style={{ marginBottom:8 }}>
-                  {tips.split("\n").filter(l=>l.trim()).map((t,i)=>(
-                    <div key={i} style={{ display:"flex",gap:10,marginBottom:12,alignItems:"flex-start" }}>
-                      <span style={{ fontFamily:"'Crimson Pro',serif",fontSize:17,lineHeight:1.7,
-                        color:"var(--ink2)",fontWeight:300 }}>
-                        {t.replace(/^[-*•\d.★]+\s*/,"")}
-                      </span>
+              <div style={{
+                background:"var(--paper)", border:"1px solid var(--border)",
+                borderRadius:16, padding:"24px 28px", marginBottom:32,
+                borderLeft:"4px solid var(--yellow)",
+              }}>
+                {examSummary.split("\n").filter(l=>l.trim()).map((line,i) => {
+                  const clean = line.replace(/^[-*•\d.]+\s*/,"").trim();
+                  if (!clean) return null;
+                  return (
+                    <div key={i} style={{ display:"flex", gap:12, alignItems:"flex-start",
+                      marginBottom: i < examSummary.split("\n").filter(l=>l.trim()).length-1 ? 12 : 0 }}>
+                      <span style={{ width:6, height:6, borderRadius:"50%", background:"var(--yellow)",
+                        flexShrink:0, marginTop:7 }} />
+                      <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:15, lineHeight:1.75,
+                        color:"var(--ink2)", fontWeight:400 }}>{clean}</p>
                     </div>
-                  ))}
-                </div>
-                <WavyLine />
-              </>}
+                  );
+                })}
+              </div>
 
+              {/* ── Quick Tips card ── */}
+              {tips && (
+                <>
+                  <SLabel text="Quick Tips" />
+                  <div style={{
+                    background:"var(--paper)", border:"1px solid var(--border)",
+                    borderRadius:16, padding:"20px 24px", marginBottom:32,
+                    display:"flex", flexDirection:"column", gap:10,
+                  }}>
+                    {tips.split("\n").filter(l=>l.trim()).map((t,i)=>{
+                      const clean = t.replace(/^[-*•\d.★]+\s*/,"").trim();
+                      if (!clean) return null;
+                      return (
+                        <div key={i} style={{
+                          display:"flex", gap:12, alignItems:"flex-start",
+                          padding:"10px 14px", borderRadius:10,
+                          background:"rgba(107,140,106,0.07)", border:"1px solid rgba(107,140,106,0.15)",
+                        }}>
+                          <span style={{ fontSize:16, flexShrink:0, marginTop:1 }}>💡</span>
+                          <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:14,
+                            lineHeight:1.7, color:"var(--ink2)", fontWeight:400 }}>{clean}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+
+              {/* ── Key Points list ── */}
               <SLabel text="Key Points" />
-              <div style={{ marginBottom:8 }}>
+              <div style={{ marginBottom:32 }}>
                 {points.map((p,i)=>(
-                  <div key={i} className="fade-up" style={{ animationDelay:`${i*0.06}s`,
-                    display:"flex",gap:14,padding:"12px 0",
-                    borderBottom:"1px solid var(--border)",alignItems:"flex-start" }}>
-                    <span style={{ fontFamily:"'Crimson Pro',serif",fontSize:13,color:"var(--muted)",
-                      minWidth:22,marginTop:3 }}>{String(i+1).padStart(2,"0")}</span>
-                    <span style={{ fontFamily:"'Crimson Pro',serif",fontSize:17,lineHeight:1.65,
-                      color:"var(--ink2)",fontWeight:300 }}>{p}</span>
+                  <div key={i} className="fade-up" style={{ animationDelay:`${i*0.05}s`,
+                    display:"flex", gap:16, padding:"14px 0",
+                    borderBottom:"1px solid var(--border)", alignItems:"flex-start" }}>
+                    <span style={{
+                      fontFamily:"'DM Sans',sans-serif", fontSize:11, fontWeight:500,
+                      color:"var(--paper)", background:"var(--terra)",
+                      borderRadius:6, padding:"2px 7px", flexShrink:0, marginTop:3,
+                      letterSpacing:"0.04em",
+                    }}>{String(i+1).padStart(2,"0")}</span>
+                    <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:15,
+                      lineHeight:1.7, color:"var(--ink2)", fontWeight:400 }}>{p}</p>
                   </div>
                 ))}
               </div>
-              <WavyLine />
 
               <SLabel text="Review Cards" />
               {flashcards.length === 0
