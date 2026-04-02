@@ -2,7 +2,6 @@ import { useState, useRef, useCallback, useEffect } from "react";
 
 const API = "http://127.0.0.1:8000/api/v1";
 
-/* ─── Mascot ──────────────────────────────────────────────────────────────── */
 const MASCOT = {
   idle:       "/mascot/idle.gif",
   welcome:    "/mascot/welcome.gif",
@@ -11,140 +10,119 @@ const MASCOT = {
   processing: "/mascot/processing.gif",
 };
 function Mascot({ pose = "idle", size = 120, style = {} }) {
-  return (
-    <img src={MASCOT[pose]} alt={pose}
-      style={{ width:size, height:size, objectFit:"contain", ...style }} />
-  );
+  return <img src={MASCOT[pose]} alt={pose} style={{ width:size, height:size, objectFit:"contain", ...style }} />;
 }
 
-/* ─── Dark mode hook ──────────────────────────────────────────────────────── */
 function useDarkMode() {
   const [dark, setDark] = useState(() => localStorage.getItem("el_dark") === "true");
-  const toggle = () => setDark(d => {
-    localStorage.setItem("el_dark", String(!d));
-    return !d;
-  });
+  const toggle = () => setDark(d => { localStorage.setItem("el_dark", String(!d)); return !d; });
   return [dark, toggle];
 }
 
-/* ─── Global CSS ──────────────────────────────────────────────────────────── */
 const GlobalStyle = ({ dark }) => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500&family=Caveat:wght@400;500;600&display=swap');
-
+    @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
     *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-
     :root {
-      --cream:  ${dark ? "#12112A" : "#F0E8D8"};
-      --cream2: ${dark ? "#1C1A3A" : "#EAE0CC"};
-      --paper:  ${dark ? "#201E40" : "#FBF8F2"};
-      --ink:    ${dark ? "#E8E2F4" : "#2C2416"};
-      --ink2:   ${dark ? "#B0A8CC" : "#5C5040"};
-      --muted:  ${dark ? "#6A6490" : "#9C8E7E"};
-      --border: ${dark ? "#302C58" : "#D8CFBF"};
-      --terra:  ${dark ? "#E8845A" : "#C4694A"};
-      --sage:   ${dark ? "#7BB87A" : "#6B8C6A"};
-      --dusty:  ${dark ? "#7BAED4" : "#6B8CAE"};
-      --yellow: ${dark ? "#E8C060" : "#D4A843"};
-      --nav-bg: ${dark ? "rgba(18,17,42,0.93)" : "rgba(234,224,204,0.93)"};
+      --cream:  ${dark ? "#0D0F1A" : "#F4EDE0"};
+      --cream2: ${dark ? "#161929" : "#EDE3D0"};
+      --paper:  ${dark ? "#1C2035" : "#FDFAF4"};
+      --paper2: ${dark ? "#222740" : "#F8F3EA"};
+      --ink:    ${dark ? "#E8E6F0" : "#1E1A12"};
+      --ink2:   ${dark ? "#9E9BB8" : "#4A3F2E"};
+      --muted:  ${dark ? "#575A7B" : "#8A7B68"};
+      --border: ${dark ? "#252845" : "#D6CAB4"};
+      --terra:  ${dark ? "#D4846A" : "#B85C3A"};
+      --sage:   ${dark ? "#6BAA6A" : "#4E7A4C"};
+      --dusty:  ${dark ? "#6898C4" : "#4A7EA8"};
+      --yellow: ${dark ? "#D4A840" : "#C08820"};
+      --accent: ${dark ? "#7B6FD0" : "#5A4FCF"};
+      --nav-bg: ${dark ? "rgba(13,15,26,0.94)" : "rgba(244,237,224,0.94)"};
     }
-
     html { scroll-behavior:smooth; }
     body {
       font-family:'DM Sans',sans-serif;
       color:var(--ink);
       min-height:100vh;
       -webkit-font-smoothing:antialiased;
-      transition: background-color 0.4s ease;
+      transition: background-color 0.5s ease;
       ${dark ? `
-        background-color: #12112A;
+        background-color: #0D0F1A;
         background-image:
-          radial-gradient(ellipse at 20% 0%,   rgba(138,100,210,0.18) 0%, transparent 55%),
-          radial-gradient(ellipse at 85% 15%,  rgba(80,120,230,0.14)  0%, transparent 50%),
-          radial-gradient(ellipse at 5%  70%,  rgba(60,90,200,0.12)   0%, transparent 45%),
-          radial-gradient(ellipse at 90% 85%,  rgba(110,70,190,0.10)  0%, transparent 40%),
-          radial-gradient(ellipse at 50% 50%,  rgba(25,22,55,0.6)     0%, transparent 75%);
-        background-attachment: fixed;
+          radial-gradient(ellipse 80% 55% at 12% 0%,   rgba(74,58,140,0.30) 0%, transparent 58%),
+          radial-gradient(ellipse 60% 50% at 90% 8%,   rgba(38,78,160,0.22) 0%, transparent 55%),
+          radial-gradient(ellipse 50% 65% at 0%  82%,  rgba(28,58,130,0.20) 0%, transparent 52%),
+          radial-gradient(ellipse 70% 48% at 100% 90%, rgba(58,38,118,0.18) 0%, transparent 50%);
+        background-attachment:fixed;
       ` : `
-        background-color: #EBE2D0;
+        background-color: #F4EDE0;
         background-image:
-          radial-gradient(ellipse at 8%   12%, rgba(196,105,74,0.22)  0%, transparent 40%),
-          radial-gradient(ellipse at 92%  8%,  rgba(212,168,67,0.18)  0%, transparent 38%),
-          radial-gradient(ellipse at 5%   72%, rgba(107,140,106,0.16) 0%, transparent 42%),
-          radial-gradient(ellipse at 95%  78%, rgba(196,105,74,0.14)  0%, transparent 36%),
-          radial-gradient(ellipse at 50%  42%, rgba(240,230,210,0.70) 0%, transparent 60%),
-          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
-        background-attachment: fixed;
+          radial-gradient(ellipse 68% 52% at 4%   7%,  rgba(184,92,58,0.18)  0%, transparent 55%),
+          radial-gradient(ellipse 58% 44% at 96%  5%,  rgba(192,136,32,0.14) 0%, transparent 50%),
+          radial-gradient(ellipse 52% 62% at 2%   90%, rgba(78,122,76,0.14)  0%, transparent 52%),
+          radial-gradient(ellipse 62% 44% at 98%  90%, rgba(184,92,58,0.12)  0%, transparent 48%),
+          radial-gradient(ellipse 48% 48% at 50%  44%, rgba(248,243,234,0.72) 0%, transparent 65%);
+        background-attachment:fixed;
       `}
     }
-
-    ::selection { background:rgba(107,140,106,0.25); }
-    ::-webkit-scrollbar { width:5px; }
-    ::-webkit-scrollbar-track { background:var(--cream); }
+    ::selection { background:${dark ? "rgba(123,111,208,0.35)" : "rgba(78,122,76,0.22)"}; }
+    ::-webkit-scrollbar { width:4px; }
+    ::-webkit-scrollbar-track { background:transparent; }
     ::-webkit-scrollbar-thumb { background:var(--border); border-radius:99px; }
 
-    @keyframes fadeUp    { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeUp    { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
     @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
-    @keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-    @keyframes readingBob{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
-    @keyframes popIn     { 0%{transform:scale(0.9);opacity:0} 60%{transform:scale(1.03)} 100%{transform:scale(1);opacity:1} }
-    @keyframes bubbleUp  { 0%,100%{transform:translateY(0);opacity:.7} 50%{transform:translateY(-12px);opacity:1} }
-    @keyframes inkWrite  { 0%{stroke-dashoffset:200} 100%{stroke-dashoffset:-200} }
-    @keyframes chatSlideIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-    @keyframes pulse     { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    @keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+    @keyframes popIn     { 0%{transform:scale(0.94);opacity:0} 60%{transform:scale(1.02)} 100%{transform:scale(1);opacity:1} }
+    @keyframes chatSlide { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes pulse     { 0%,100%{opacity:0.25} 50%{opacity:1} }
+    @keyframes spin      { to{transform:rotate(360deg)} }
+    @keyframes orbitA    { from{transform:rotate(0deg)   translateX(38px) rotate(0deg)}   to{transform:rotate(360deg)  translateX(38px) rotate(-360deg)} }
+    @keyframes orbitB    { from{transform:rotate(120deg) translateX(26px) rotate(-120deg)} to{transform:rotate(480deg) translateX(26px) rotate(-480deg)} }
+    @keyframes orbitC    { from{transform:rotate(240deg) translateX(16px) rotate(-240deg)} to{transform:rotate(600deg) translateX(16px) rotate(-600deg)} }
 
-    .fade-up { animation:fadeUp  0.55s cubic-bezier(.22,1,.36,1) both; }
-    .fade-in { animation:fadeIn  0.35s ease both; }
-    .pop-in  { animation:popIn   0.45s cubic-bezier(.22,1,.36,1) both; }
+    .fade-up { animation:fadeUp  0.5s cubic-bezier(.22,1,.36,1) both; }
+    .fade-in { animation:fadeIn  0.3s ease both; }
+    .pop-in  { animation:popIn   0.4s cubic-bezier(.22,1,.36,1) both; }
 
-    .wavy-divider { width:100%; overflow:visible; margin:32px 0; }
-    .wavy-path { fill:none; stroke:var(--border); stroke-width:1.5; stroke-linecap:round; }
+    .wavy-divider { width:100%; overflow:visible; margin:28px 0; }
+    .wavy-path { fill:none; stroke:var(--border); stroke-width:1; stroke-linecap:round; }
 
     .field {
-      width:100%; padding:12px 16px; border:1px solid var(--border);
+      width:100%; padding:11px 16px; border:1.5px solid var(--border);
       border-radius:10px; background:var(--paper);
-      font-family:'DM Sans',sans-serif; font-size:15px; color:var(--ink);
-      outline:none; transition:border-color .2s;
+      font-family:'DM Sans',sans-serif; font-size:14px; color:var(--ink);
+      outline:none; transition:border-color .2s, box-shadow .2s;
     }
-    .field:focus { border-color:var(--sage); }
+    .field:focus { border-color:var(--sage); box-shadow:0 0 0 3px ${dark ? "rgba(107,170,106,0.15)" : "rgba(78,122,76,0.12)"}; }
     .field::placeholder { color:var(--muted); }
 
-    .auth-card {
-      background:var(--paper); border:1px solid var(--border);
-      border-radius:20px; padding:40px 36px; width:100%; max-width:420px;
-    }
+    .auth-card { background:var(--paper); border:1.5px solid var(--border); border-radius:20px; padding:40px 36px; width:100%; max-width:400px; }
 
-    .fc-scene { perspective:1000px; width:100%; height:300px; cursor:pointer; margin-bottom:20px; }
-    .fc-inner {
-      position:relative; width:100%; height:100%;
-      transition:transform 0.65s cubic-bezier(0.4,0.2,0.2,1);
-      transform-style:preserve-3d; -webkit-transform-style:preserve-3d;
-    }
+    .fc-scene { perspective:1000px; width:100%; height:280px; cursor:pointer; margin-bottom:20px; }
+    .fc-inner { position:relative; width:100%; height:100%; transition:transform 0.6s cubic-bezier(0.4,0.2,0.2,1); transform-style:preserve-3d; }
     .fc-inner.is-flipped { transform:rotateY(180deg); }
     .fc-front, .fc-back {
-      position:absolute; width:100%; height:100%;
-      backface-visibility:hidden; -webkit-backface-visibility:hidden;
-      border-radius:20px; display:flex; flex-direction:column;
-      align-items:center; justify-content:center;
-      padding:36px; text-align:center; will-change:transform;
+      position:absolute; width:100%; height:100%; backface-visibility:hidden;
+      border-radius:16px; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; padding:32px; text-align:center;
     }
-    .fc-front { background:var(--paper); border:1.5px solid var(--border); transform:rotateY(0deg); }
-    .fc-back  { background:var(--cream2); border:1.5px solid var(--border); transform:rotateY(180deg); }
+    .fc-front { background:var(--paper); border:1.5px solid var(--border); }
+    .fc-back  { background:var(--paper2); border:1.5px solid var(--border); transform:rotateY(180deg); }
 
     .chat-bubble-ai {
       background:var(--paper); border:1px solid var(--border);
-      border-radius:18px 18px 18px 4px; padding:11px 15px;
-      font-size:13.5px; color:var(--ink); line-height:1.65;
-      animation:chatSlideIn 0.3s ease both; max-width:86%;
+      border-radius:16px 16px 16px 4px; padding:10px 14px;
+      font-size:13px; color:var(--ink); line-height:1.65;
+      animation:chatSlide 0.25s ease both; max-width:88%;
     }
     .chat-bubble-user {
-      background:var(--sage); border-radius:18px 18px 4px 18px;
-      padding:10px 15px; font-size:13.5px; color:#fff;
-      line-height:1.6; animation:chatSlideIn 0.3s ease both;
-      max-width:80%; align-self:flex-end;
+      background:var(--sage); border-radius:16px 16px 4px 16px;
+      padding:10px 14px; font-size:13px; color:#fff; line-height:1.6;
+      animation:chatSlide 0.25s ease both; max-width:82%; align-self:flex-end;
     }
     .chat-input {
-      width:100%; padding:10px 16px; border:1px solid var(--border);
+      width:100%; padding:10px 16px; border:1.5px solid var(--border);
       border-radius:99px; background:var(--paper);
       font-family:'DM Sans',sans-serif; font-size:13px; color:var(--ink);
       outline:none; transition:border-color .2s;
@@ -152,83 +130,96 @@ const GlobalStyle = ({ dark }) => (
     .chat-input:focus { border-color:var(--sage); }
     .chat-input::placeholder { color:var(--muted); }
 
-    .quiz-option {
-      width:100%; text-align:left; padding:11px 18px;
-      border:1px solid var(--border); border-radius:12px;
+    .quiz-opt {
+      width:100%; text-align:left; padding:12px 18px; margin-bottom:8px;
+      border:1.5px solid var(--border); border-radius:10px;
       background:var(--paper); color:var(--ink);
       font-family:'DM Sans',sans-serif; font-size:14px;
-      cursor:pointer; transition:all .2s; margin-bottom:8px;
-      display:block;
+      cursor:pointer; transition:all .18s; display:block;
     }
-    .quiz-option:hover { border-color:var(--sage); background:var(--cream2); }
-    .quiz-option.correct { border-color:var(--sage); background:rgba(107,140,106,0.12); color:var(--sage); }
-    .quiz-option.wrong   { border-color:var(--terra); background:rgba(196,105,74,0.10); color:var(--terra); }
+    .quiz-opt:hover:not(:disabled) { border-color:var(--sage); background:var(--paper2); }
+    .quiz-opt.correct { border-color:var(--sage); background:${dark ? "rgba(107,170,106,0.15)" : "rgba(78,122,76,0.10)"}; color:var(--sage); }
+    .quiz-opt.wrong   { border-color:var(--terra); background:${dark ? "rgba(212,132,106,0.12)" : "rgba(184,92,58,0.08)"}; color:var(--terra); }
   `}</style>
 );
 
-/* ─── Wavy divider ────────────────────────────────────────────────────────── */
-const WavyLine = ({ color = "var(--border)" }) => (
-  <svg className="wavy-divider" height="20" viewBox="0 0 700 20" preserveAspectRatio="none">
-    <path className="wavy-path" stroke={color}
-      d="M0 10 C50 4,100 16,150 10 C200 4,250 16,300 10 C350 4,400 16,450 10 C500 4,550 16,600 10 C640 5,670 14,700 10" />
+const WavyLine = () => (
+  <svg className="wavy-divider" height="16" viewBox="0 0 700 16" preserveAspectRatio="none">
+    <path className="wavy-path" d="M0 8 C58 3,116 13,175 8 C233 3,291 13,350 8 C408 3,466 13,525 8 C583 3,641 13,700 8"/>
   </svg>
 );
 
-/* ─── Dark mode toggle ────────────────────────────────────────────────────── */
+const STag = ({ children }) => (
+  <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
+    <div style={{ width:16, height:1, background:"var(--border)", flexShrink:0 }} />
+    <span style={{ fontSize:10, fontWeight:600, letterSpacing:"0.12em", textTransform:"uppercase",
+      color:"var(--muted)", fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap" }}>{children}</span>
+    <div style={{ flex:1, height:1, background:"var(--border)" }} />
+  </div>
+);
+
 function DarkToggle({ dark, onToggle }) {
   return (
     <button onClick={onToggle} title={dark ? "Light mode" : "Dark mode"} style={{
-      background:"none", border:"1px solid var(--border)", borderRadius:99,
-      padding:"5px 11px", cursor:"pointer", fontSize:14, lineHeight:1,
-      color:"var(--muted)", transition:"all .2s",
+      width:36, height:20, borderRadius:99, cursor:"pointer",
+      border:"none", padding:2, transition:"background .3s",
+      background: dark ? "var(--accent)" : "var(--border)",
+      position:"relative", flexShrink:0,
     }}>
-      {dark ? "☀️" : "🌙"}
+      <span style={{
+        position:"absolute", top:2, width:16, height:16, borderRadius:"50%",
+        background:"#fff", transition:"left .3s cubic-bezier(.4,0,.2,1)",
+        left: dark ? "calc(100% - 18px)" : "2px",
+        boxShadow:"0 1px 4px rgba(0,0,0,0.25)",
+      }} />
     </button>
   );
 }
 
-/* ─── Navbar ──────────────────────────────────────────────────────────────── */
 function Navbar({ page, setPage, user, onLogout, dark, onToggleDark }) {
   return (
     <nav style={{
       display:"flex", alignItems:"center", justifyContent:"space-between",
-      padding:"16px 48px", position:"sticky", top:0, zIndex:100,
-      backdropFilter:"blur(14px)", backgroundColor:"var(--nav-bg)",
-      borderBottom:"1px solid var(--border)",
+      padding:"14px 48px", position:"sticky", top:0, zIndex:100,
+      backdropFilter:"blur(18px)", WebkitBackdropFilter:"blur(18px)",
+      backgroundColor:"var(--nav-bg)", borderBottom:"1px solid var(--border)",
     }}>
       <div onClick={() => setPage(user ? "upload" : "login")}
-        style={{ fontFamily:"'Crimson Pro',serif", fontSize:24, fontStyle:"italic",
-          fontWeight:600, letterSpacing:"-0.02em", cursor:"pointer", color:"var(--ink)" }}>
+        style={{ fontFamily:"'Crimson Pro',serif", fontSize:22, fontStyle:"italic",
+          fontWeight:600, letterSpacing:"-0.02em", cursor:"pointer", color:"var(--ink)", userSelect:"none" }}>
         EasyLearn
       </div>
       <div style={{ display:"flex", alignItems:"center", gap:24 }}>
         {user && ["upload","history","about"].map(p => (
           <button key={p} onClick={() => setPage(p)} style={{
             background:"none", border:"none", cursor:"pointer",
-            fontFamily:"'DM Sans',sans-serif", fontSize:14,
+            fontFamily:"'DM Sans',sans-serif", fontSize:13, fontWeight:500,
             color: page===p ? "var(--ink)" : "var(--muted)",
             textTransform:"capitalize", position:"relative", padding:"4px 0", transition:"color .2s",
           }}>
             {p}
-            {page===p && <span style={{ position:"absolute", bottom:-2, left:0, right:0,
-              height:1, background:"var(--ink)", borderRadius:99 }} />}
+            {page===p && <span style={{ position:"absolute", bottom:-1, left:0, right:0,
+              height:1.5, background:"var(--ink)", borderRadius:99 }} />}
           </button>
         ))}
-        <DarkToggle dark={dark} onToggle={onToggleDark} />
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <span style={{ fontSize:11, color:"var(--muted)" }}>{dark ? "Dark" : "Light"}</span>
+          <DarkToggle dark={dark} onToggle={onToggleDark} />
+        </div>
         {user ? (
           <div style={{ display:"flex", alignItems:"center", gap:12 }}>
             <span style={{ fontSize:13, color:"var(--muted)" }}>Hi, {user.name.split(" ")[0]}</span>
             <button onClick={onLogout} style={{
-              background:"none", border:"1px solid var(--border)", cursor:"pointer",
+              background:"none", border:"1.5px solid var(--border)", cursor:"pointer",
               fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"var(--muted)",
-              padding:"5px 12px", borderRadius:99, transition:"all .2s",
+              padding:"4px 12px", borderRadius:8, transition:"all .2s",
             }}>Sign out</button>
           </div>
         ) : (
           <button onClick={() => setPage("login")} style={{
             background:"var(--ink)", border:"none", cursor:"pointer",
-            fontFamily:"'Crimson Pro',serif", fontSize:15, fontStyle:"italic",
-            color:"var(--cream)", padding:"7px 20px", borderRadius:99,
+            fontFamily:"'DM Sans',sans-serif", fontSize:13, fontWeight:500,
+            color:"var(--cream)", padding:"7px 18px", borderRadius:8,
           }}>Sign in</button>
         )}
       </div>
@@ -236,7 +227,6 @@ function Navbar({ page, setPage, user, onLogout, dark, onToggleDark }) {
   );
 }
 
-/* ─── Auth page ───────────────────────────────────────────────────────────── */
 function AuthPage({ onAuth }) {
   const [mode, setMode]         = useState("login");
   const [name, setName]         = useState("");
@@ -248,57 +238,50 @@ function AuthPage({ onAuth }) {
   const submit = async () => {
     setError(null); setLoading(true);
     try {
-      const endpoint = mode === "login" ? "/auth/login" : "/auth/signup";
-      const body = mode === "login" ? { email, password } : { name, email, password };
-      const res = await fetch(`${API}${endpoint}`, {
-        method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body),
+      const res = await fetch(`${API}${mode==="login"?"/auth/login":"/auth/signup"}`, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(mode==="login"?{email,password}:{name,email,password}),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Something went wrong");
+      if (!res.ok) throw new Error(data.detail||"Something went wrong");
       localStorage.setItem("el_token", data.token);
-      localStorage.setItem("el_user",  JSON.stringify(data.user));
+      localStorage.setItem("el_user", JSON.stringify(data.user));
       onAuth(data.user);
     } catch(e) { setError(e.message); }
     finally { setLoading(false); }
   };
 
   return (
-    <div style={{ minHeight:"85vh", display:"flex", alignItems:"center",
-      justifyContent:"center", padding:"40px 24px" }}>
+    <div style={{ minHeight:"86vh", display:"flex", alignItems:"center", justifyContent:"center", padding:"40px 24px" }}>
       <div className="auth-card fade-up">
-        <div style={{ textAlign:"center", marginBottom:24 }}>
-          <Mascot pose="welcome" size={100} style={{ animation:"float 3s ease infinite" }} />
-          <h1 style={{ fontFamily:"'Crimson Pro',serif", fontSize:28, fontStyle:"italic",
-            fontWeight:600, marginTop:12, letterSpacing:"-0.02em", color:"var(--ink)" }}>
-            {mode === "login" ? "Welcome back!" : "Create your account"}
+        <div style={{ textAlign:"center", marginBottom:28 }}>
+          <h1 style={{ fontFamily:"'Crimson Pro',serif", fontSize:26, fontStyle:"italic",
+            fontWeight:600, color:"var(--ink)", letterSpacing:"-0.02em" }}>
+            {mode==="login" ? "Welcome back" : "Create your account"}
           </h1>
           <p style={{ fontSize:13, color:"var(--muted)", marginTop:6 }}>
-            {mode === "login" ? "Sign in to see your summaries" : "Free forever — takes 10 seconds"}
+            {mode==="login" ? "Sign in to access your summaries" : "Free — takes under a minute"}
           </p>
         </div>
-        <WavyLine />
-        <div style={{ display:"flex", flexDirection:"column", gap:12, marginTop:8 }}>
-          {mode === "signup" && (
-            <input className="field" placeholder="Your name" value={name} onChange={e=>setName(e.target.value)} />
-          )}
+        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          {mode==="signup" && <input className="field" placeholder="Your name" value={name} onChange={e=>setName(e.target.value)} />}
           <input className="field" type="email" placeholder="Email address" value={email} onChange={e=>setEmail(e.target.value)} />
           <input className="field" type="password" placeholder="Password" value={password}
             onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} />
         </div>
         {error && <p style={{ marginTop:10, fontSize:13, color:"var(--terra)", textAlign:"center" }}>{error}</p>}
         <button onClick={submit} disabled={loading} style={{
-          width:"100%", marginTop:20, padding:"13px", borderRadius:99, border:"none",
-          cursor: loading?"not-allowed":"pointer", background:"var(--ink)", color:"var(--cream)",
-          fontFamily:"'Crimson Pro',serif", fontSize:17, fontStyle:"italic",
-          opacity: loading ? 0.6 : 1, transition:"all .2s",
+          width:"100%", marginTop:18, padding:"12px", borderRadius:10, border:"none",
+          cursor:loading?"not-allowed":"pointer", background:"var(--ink)", color:"var(--cream)",
+          fontFamily:"'DM Sans',sans-serif", fontSize:14, fontWeight:500, opacity:loading?0.6:1, transition:"all .2s",
         }}>
-          {loading ? "One moment..." : mode === "login" ? "Sign in →" : "Get started →"}
+          {loading ? "Please wait…" : mode==="login" ? "Sign in" : "Get started"}
         </button>
         <p style={{ textAlign:"center", marginTop:16, fontSize:13, color:"var(--muted)" }}>
-          {mode === "login" ? "New here? " : "Already have an account? "}
-          <button onClick={()=>{ setMode(mode==="login"?"signup":"login"); setError(null); }}
-            style={{ background:"none", border:"none", cursor:"pointer", color:"var(--sage)", fontWeight:500, fontSize:13 }}>
-            {mode === "login" ? "Create an account" : "Sign in"}
+          {mode==="login" ? "No account? " : "Already registered? "}
+          <button onClick={()=>{setMode(mode==="login"?"signup":"login");setError(null);}}
+            style={{ background:"none", border:"none", cursor:"pointer", color:"var(--sage)", fontWeight:600, fontSize:13 }}>
+            {mode==="login" ? "Sign up free" : "Sign in"}
           </button>
         </p>
       </div>
@@ -306,7 +289,6 @@ function AuthPage({ onAuth }) {
   );
 }
 
-/* ─── Upload page ─────────────────────────────────────────────────────────── */
 function UploadPage({ onResult }) {
   const [files, setFiles]       = useState([]);
   const [dragging, setDragging] = useState(false);
@@ -317,51 +299,54 @@ function UploadPage({ onResult }) {
   const ALLOWED = ["application/pdf","image/png","image/jpeg","image/webp"];
 
   const addFiles = useCallback((incoming) => {
-    const valid = Array.from(incoming).filter(f => ALLOWED.includes(f.type));
-    if (valid.length < incoming.length) setError("Only PDF, JPG, PNG and WEBP files are supported.");
+    const valid = Array.from(incoming).filter(f=>ALLOWED.includes(f.type));
+    if (valid.length < incoming.length) setError("Only PDF, JPG, PNG and WEBP are supported.");
     else setError(null);
-    setFiles(prev => {
-      const names = new Set(prev.map(f => f.name));
-      return [...prev, ...valid.filter(f => !names.has(f.name))];
-    });
+    setFiles(prev => { const n = new Set(prev.map(f=>f.name)); return [...prev, ...valid.filter(f=>!n.has(f.name))]; });
   }, []);
 
   const steps = [
-    "Reading your notes now...",
-    "Picking out the important bits...",
-    "Thinking it through carefully...",
-    "Putting the summary together...",
-    "Almost ready, hang tight...",
+    "Reading your file…",
+    "Extracting the key content…",
+    "Structuring the summary…",
+    "Building your flashcards…",
+    "Almost done…",
   ];
 
   const submit = async () => {
     if (!files.length) return;
     setLoading(true); setError(null);
     let si = 0; setProcStep(0);
-    const iv = setInterval(() => { si = Math.min(si+1, steps.length-1); setProcStep(si); }, 5000);
+    const iv = setInterval(() => { si = Math.min(si+1,steps.length-1); setProcStep(si); }, 5000);
     try {
       const fd = new FormData();
-      files.forEach(f => fd.append("files", f));
+      files.forEach(f=>fd.append("files",f));
       const token = localStorage.getItem("el_token");
       const res = await fetch(`${API}/upload`, {
         method:"POST", body:fd,
-        headers: token ? { "Authorization":`Bearer ${token}` } : {},
+        headers:token?{"Authorization":`Bearer ${token}`}:{},
       });
-      if (!res.ok) { const e = await res.json(); throw new Error(e.detail || "Upload failed"); }
+      if (!res.ok) { const e = await res.json(); throw new Error(e.detail||"Upload failed"); }
       const data = await res.json();
       clearInterval(iv);
-      onResult(data, files.map(f => f.name));
+      onResult(data, files.map(f=>f.name));
       setFiles([]);
     } catch(e) { clearInterval(iv); setError(e.message); }
     finally { setLoading(false); }
   };
 
-  if (loading) return <ProcessingPage step={steps[procStep]} fileNames={files.map(f=>f.name)} />;
+  if (loading) return <ProcessingPage step={steps[procStep]} stepIdx={procStep} totalSteps={steps.length} fileNames={files.map(f=>f.name)} />;
 
   return (
-    <div style={{ maxWidth:720, margin:"0 auto", padding:"40px 24px 80px" }}>
-      <div style={{ display:"flex", justifyContent:"flex-end", marginBottom:-10 }}>
-        <Mascot pose="idle" size={90} style={{ animation:"float 3s ease infinite" }} />
+    <div style={{ maxWidth:600, margin:"0 auto", padding:"64px 24px 80px" }}>
+      <div className="fade-up" style={{ marginBottom:36 }}>
+        <h1 style={{ fontFamily:"'Crimson Pro',serif", fontSize:"clamp(26px,4vw,40px)",
+          fontWeight:600, fontStyle:"italic", letterSpacing:"-0.03em", color:"var(--ink)", marginBottom:8 }}>
+          Upload your notes
+        </h1>
+        <p style={{ fontSize:14, color:"var(--muted)", lineHeight:1.6 }}>
+          Drop a PDF, photo or scan — Ducky will read everything and build your summary.
+        </p>
       </div>
 
       <div onClick={()=>inputRef.current?.click()}
@@ -370,112 +355,112 @@ function UploadPage({ onResult }) {
         onDrop={e=>{e.preventDefault();setDragging(false);addFiles(e.dataTransfer.files);}}
         className="fade-up"
         style={{
-          border:`1.5px dashed ${dragging?"var(--sage)":"var(--border)"}`,
+          border:`2px dashed ${dragging?"var(--sage)":"var(--border)"}`,
           borderRadius:16, padding:"52px 32px", textAlign:"center", cursor:"pointer",
-          background: dragging ? "rgba(107,140,106,0.06)" : "rgba(250,247,242,0.4)",
-          transition:"all .25s",
+          background:dragging?"rgba(78,122,76,0.06)":"rgba(253,250,244,0.45)",
+          transition:"all .2s",
         }}>
         <input ref={inputRef} type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp"
-          style={{ display:"none" }} onChange={e=>addFiles(e.target.files)} />
-        {files.length === 0 ? (
-          <p style={{ fontFamily:"'Crimson Pro',serif", fontSize:18, color:"var(--muted)", fontStyle:"italic" }}>
-            Drop your notes here, or click to pick a file.
-          </p>
+          style={{display:"none"}} onChange={e=>addFiles(e.target.files)} />
+        {files.length===0 ? (
+          <>
+            <div style={{ width:44, height:44, margin:"0 auto 14px",
+              background:"var(--paper2)", border:"1.5px solid var(--border)",
+              borderRadius:12, display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1.8" strokeLinecap="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:14, color:"var(--muted)" }}>
+              Drop files here or <span style={{color:"var(--sage)",fontWeight:500}}>click to browse</span>
+            </p>
+            <p style={{ fontSize:12, color:"var(--muted)", marginTop:6, opacity:0.7 }}>PDF · JPG · PNG · WEBP</p>
+          </>
         ) : (
           <div>
-            <div style={{ display:"flex", flexWrap:"wrap", gap:8, justifyContent:"center", marginBottom:14 }}>
+            <div style={{ display:"flex", flexWrap:"wrap", gap:8, justifyContent:"center", marginBottom:12 }}>
               {files.map(f => (
                 <span key={f.name} style={{
-                  display:"inline-flex", alignItems:"center", gap:6,
-                  padding:"4px 12px", borderRadius:99,
-                  border:"1px solid var(--border)", background:"var(--paper)",
-                  fontSize:13, color:"var(--ink2)",
+                  display:"inline-flex", alignItems:"center", gap:6, padding:"5px 12px",
+                  borderRadius:8, border:"1.5px solid var(--border)", background:"var(--paper)",
+                  fontSize:12, color:"var(--ink2)",
                 }}>
-                  <span style={{ width:6, height:6, borderRadius:"50%",
-                    background: f.type==="application/pdf" ? "var(--terra)" : "var(--dusty)",
-                    display:"inline-block" }} />
+                  <span style={{ width:6, height:6, borderRadius:"50%", flexShrink:0,
+                    background:f.type==="application/pdf"?"var(--terra)":"var(--dusty)" }} />
                   {f.name}
-                  <button onClick={e=>{e.stopPropagation();setFiles(prev=>prev.filter(x=>x.name!==f.name));}}
-                    style={{ background:"none",border:"none",cursor:"pointer",color:"var(--muted)",fontSize:15 }}>×</button>
+                  <button onClick={e=>{e.stopPropagation();setFiles(p=>p.filter(x=>x.name!==f.name));}}
+                    style={{background:"none",border:"none",cursor:"pointer",color:"var(--muted)",fontSize:16,lineHeight:1,padding:0}}>×</button>
                 </span>
               ))}
             </div>
-            <p style={{ fontSize:13, color:"var(--muted)" }}>Click to add more files</p>
+            <p style={{ fontSize:12, color:"var(--muted)" }}>Click to add more files</p>
           </div>
         )}
       </div>
 
       {error && <p style={{ marginTop:10, fontSize:13, color:"var(--terra)", textAlign:"center" }}>{error}</p>}
 
-      <div className="fade-up" style={{ animationDelay:".1s", display:"flex", justifyContent:"center", marginTop:24 }}>
+      <div style={{ display:"flex", justifyContent:"center", marginTop:24 }}>
         <button onClick={submit} disabled={!files.length} style={{
-          fontFamily:"'Crimson Pro',serif", fontSize:18, fontStyle:"italic",
-          padding:"11px 36px", borderRadius:99,
-          border:"1.5px solid var(--ink)", background:"transparent",
-          color:"var(--ink)", cursor: files.length?"pointer":"not-allowed",
-          opacity: files.length ? 1 : 0.35, transition:"all .2s",
-        }}
-          onMouseEnter={e=>{if(files.length){e.target.style.background="var(--ink)";e.target.style.color="var(--cream)";}}}
-          onMouseLeave={e=>{e.target.style.background="transparent";e.target.style.color="var(--ink)";}}>
+          fontFamily:"'DM Sans',sans-serif", fontSize:14, fontWeight:600,
+          padding:"12px 40px", borderRadius:10,
+          background:files.length?"var(--ink)":"var(--border)",
+          border:"none", color:files.length?"var(--cream)":"var(--muted)",
+          cursor:files.length?"pointer":"not-allowed", transition:"all .2s",
+        }}>
           Summarise →
         </button>
       </div>
-      <p className="fade-up" style={{ animationDelay:".2s", textAlign:"center", marginTop:14,
-        fontSize:12, color:"var(--muted)", letterSpacing:"0.03em" }}>
-        PDF · JPG · PNG · WEBP · handwritten notes welcome
-      </p>
     </div>
   );
 }
 
-/* ─── Processing page — fixed alignment ──────────────────────────────────── */
-function ProcessingPage({ step, fileNames }) {
+function ProcessingPage({ step, stepIdx, totalSteps, fileNames }) {
   return (
-    <div style={{
-      minHeight:"88vh", display:"flex", flexDirection:"column",
-      alignItems:"center", justifyContent:"center", gap:24, padding:"40px 24px",
-    }}>
-      <Mascot pose="processing" size={160} style={{ animation:"readingBob 2.2s ease infinite" }} />
+    <div style={{ minHeight:"88vh", display:"flex", flexDirection:"column",
+      alignItems:"center", justifyContent:"center", gap:32, padding:"40px 24px" }}>
 
-      <p key={step} style={{
-        fontFamily:"'Crimson Pro',serif", fontSize:24, fontStyle:"italic",
-        color:"var(--ink2)", textAlign:"center", lineHeight:1.45,
-        animation:"fadeIn 0.45s ease both", maxWidth:340,
-      }}>
-        {step}
-      </p>
+      <div style={{ position:"relative", width:96, height:96 }}>
+        <div style={{ position:"absolute", top:"50%", left:"50%",
+          transform:"translate(-50%,-50%)", width:14, height:14,
+          borderRadius:"50%", background:"var(--sage)", opacity:0.9 }} />
+        <svg width="96" height="96" style={{ position:"absolute", top:0, left:0 }}>
+          <circle cx="48" cy="48" r="40" fill="none" stroke="var(--border)" strokeWidth="1" />
+          <circle cx="48" cy="48" r="40" fill="none" stroke="var(--sage)" strokeWidth="1.5"
+            strokeDasharray="55 196" strokeLinecap="round"
+            style={{ animation:"spin 2s linear infinite", transformOrigin:"48px 48px" }} />
+        </svg>
+        <div style={{ position:"absolute", top:"50%", left:"50%", marginTop:-5, marginLeft:-5,
+          width:10, height:10, borderRadius:"50%", background:"var(--terra)",
+          animation:"orbitA 2s linear infinite" }} />
+        <div style={{ position:"absolute", top:"50%", left:"50%", marginTop:-4, marginLeft:-4,
+          width:8, height:8, borderRadius:"50%", background:"var(--yellow)",
+          animation:"orbitB 1.5s linear infinite" }} />
+        <div style={{ position:"absolute", top:"50%", left:"50%", marginTop:-3, marginLeft:-3,
+          width:6, height:6, borderRadius:"50%", background:"var(--dusty)",
+          animation:"orbitC 1s linear infinite" }} />
+      </div>
 
-      {/* Dots + underline — all centred in a flex column */}
-      <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:10 }}>
-        <div style={{ display:"flex", gap:10, alignItems:"center" }}>
-          {[
-            { color:"#C4694A", delay:"0s" },
-            { color:"#6B8C6A", delay:"0.18s" },
-            { color:"#D4A843", delay:"0.36s" },
-            { color:"#6B8CAE", delay:"0.54s" },
-            { color:"#C4694A", delay:"0.72s" },
-          ].map((b,i) => (
+      <div style={{ textAlign:"center", maxWidth:300 }}>
+        <p key={step} style={{ fontFamily:"'DM Sans',sans-serif", fontSize:15, fontWeight:500,
+          color:"var(--ink)", marginBottom:16, animation:"fadeIn 0.4s ease both" }}>{step}</p>
+        <div style={{ display:"flex", gap:6, justifyContent:"center" }}>
+          {Array.from({length:totalSteps}).map((_,i) => (
             <div key={i} style={{
-              width:10, height:10, borderRadius:"50%",
-              background:b.color, opacity:0.8,
-              animation:"bubbleUp 1.1s ease infinite",
-              animationDelay:b.delay,
+              width: i===stepIdx ? 20 : 6, height:6, borderRadius:99,
+              background: i===stepIdx ? "var(--sage)" : "var(--border)",
+              transition:"all .4s cubic-bezier(.22,1,.36,1)",
             }} />
           ))}
         </div>
-        <svg width="160" height="10" viewBox="0 0 160 10" style={{ display:"block" }}>
-          <path d="M4 6 Q40 2 80 6 Q120 10 156 6" fill="none" stroke="var(--border)" strokeWidth="1.5" strokeLinecap="round"/>
-          <path d="M4 6 Q40 2 80 6 Q120 10 156 6" fill="none" stroke="var(--sage)" strokeWidth="2"
-            strokeLinecap="round" strokeDasharray="200"
-            style={{ animation:"inkWrite 2.4s ease infinite" }} />
-        </svg>
       </div>
 
       {fileNames?.length > 0 && (
         <div style={{ display:"flex", flexWrap:"wrap", gap:6, justifyContent:"center" }}>
           {fileNames.map(n => (
-            <span key={n} style={{ padding:"3px 14px", borderRadius:99,
-              border:"1px solid var(--border)", fontSize:12, color:"var(--muted)" }}>{n}</span>
+            <span key={n} style={{ padding:"3px 12px", borderRadius:6,
+              border:"1px solid var(--border)", fontSize:11, color:"var(--muted)" }}>{n}</span>
           ))}
         </div>
       )}
@@ -483,23 +468,21 @@ function ProcessingPage({ step, fileNames }) {
   );
 }
 
-/* ─── Copy button ─────────────────────────────────────────────────────────── */
 function CopyBtn({ text }) {
   const [copied, setCopied] = useState(false);
   return (
-    <button onClick={()=>{ navigator.clipboard.writeText(text); setCopied(true); setTimeout(()=>setCopied(false),2000); }}
-      style={{ background:"none", border:"1px solid var(--border)", borderRadius:8,
-        padding:"5px 10px", cursor:"pointer", color:copied?"var(--sage)":"var(--muted)",
+    <button onClick={()=>{navigator.clipboard.writeText(text);setCopied(true);setTimeout(()=>setCopied(false),2000);}}
+      style={{ background:"none", border:"1.5px solid var(--border)", borderRadius:8,
+        padding:"5px 12px", cursor:"pointer", color:copied?"var(--sage)":"var(--muted)",
         fontSize:12, fontFamily:"'DM Sans',sans-serif", display:"flex", alignItems:"center", gap:5 }}>
       {copied
-        ? <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>Copied!</>
-        : <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</>
+        ? <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>Copied</>
+        : <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</>
       }
     </button>
   );
 }
 
-/* ─── PDF export — handwritten notebook style ────────────────────────────── */
 function exportPDF(topic, raw) {
   const win = window.open("", "_blank");
   const clean = raw.replace(/[📚✅🔑🧠📝🎯\*#]/g,"").replace(/\n/g,"</p><p>");
@@ -507,54 +490,21 @@ function exportPDF(topic, raw) {
     <title>${topic} — EasyLearn Notes</title>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&family=Patrick+Hand&display=swap" rel="stylesheet"/>
     <style>
-      @page { margin:50px 65px; }
-      * { box-sizing:border-box; }
-      body {
-        font-family:'Caveat',cursive;
-        background:#FDFAF3;
-        color:#1a3a6e;
-        line-height:2.15;
-        font-size:19px;
-        margin:0;
-        padding:24px 40px 48px;
-        background-image: repeating-linear-gradient(
-          transparent, transparent 34px, #b8cce4 34px, #b8cce4 35px
-        );
-        min-height:100vh;
-      }
-      .page-top {
-        display:flex; justify-content:space-between; align-items:baseline;
-        border-bottom:2px solid #1a3a6e; padding-bottom:10px; margin-bottom:4px;
-      }
-      h1 {
-        font-family:'Caveat',cursive;
-        font-size:34px; font-weight:600; color:#1a1a2e;
-        margin:0; letter-spacing:-0.01em;
-      }
-      .date { font-family:'Patrick Hand',cursive; font-size:13px; color:#9ab5ce; }
-      .label {
-        font-family:'Patrick Hand',cursive; font-size:13px;
-        letter-spacing:.1em; text-transform:uppercase;
-        color:#7a9abf; margin:26px 0 6px; font-style:italic;
-      }
-      p { font-size:18px; margin-bottom:2px; color:#1a3a6e; }
-      .brand {
-        font-family:'Caveat',cursive; font-size:13px; color:#9ab5ce;
-        margin-top:48px; text-align:right; font-style:italic;
-      }
-      .red-margin {
-        position:fixed; top:0; bottom:0; left:88px;
-        width:2px; background:#f9b3b3; pointer-events:none;
-      }
-      @media print { .red-margin { position:absolute; height:100%; } }
+      @page{margin:50px 65px;}
+      body{font-family:'Caveat',cursive;background:#FDFAF3;color:#1a3a6e;line-height:2.15;font-size:19px;margin:0;padding:24px 40px 48px;
+        background-image:repeating-linear-gradient(transparent,transparent 34px,#b8cce4 34px,#b8cce4 35px);}
+      .top{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #1a3a6e;padding-bottom:10px;margin-bottom:4px;}
+      h1{font-family:'Caveat',cursive;font-size:34px;font-weight:600;color:#1a1a2e;margin:0;}
+      .date{font-family:'Patrick Hand',cursive;font-size:13px;color:#9ab5ce;}
+      .label{font-family:'Patrick Hand',cursive;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#7a9abf;margin:26px 0 6px;font-style:italic;}
+      p{font-size:18px;margin-bottom:2px;color:#1a3a6e;}
+      .brand{font-family:'Caveat',cursive;font-size:13px;color:#9ab5ce;margin-top:48px;text-align:right;font-style:italic;}
+      .ml{position:fixed;top:0;bottom:0;left:88px;width:2px;background:#f9b3b3;pointer-events:none;}
     </style>
   </head><body>
-    <div class="red-margin"></div>
-    <div class="page-top">
-      <h1>${topic}</h1>
-      <span class="date">${new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}</span>
-    </div>
-    <div class="label">My Study Notes — EasyLearn 📓</div>
+    <div class="ml"></div>
+    <div class="top"><h1>${topic}</h1><span class="date">${new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}</span></div>
+    <div class="label">EasyLearn Study Notes</div>
     <p>${clean}</p>
     <p class="brand">easylearn.local</p>
     <script>window.onload=()=>window.print();</script>
@@ -562,246 +512,217 @@ function exportPDF(topic, raw) {
   win.document.close();
 }
 
-/* ─── Quiz Generator ──────────────────────────────────────────────────────── */
-function QuizPanel({ concepts, points }) {
-  const buildQuestions = () => {
+function QuizInline({ concepts, points, onClose }) {
+  const buildQ = () => {
     const qs = [];
     concepts.slice(0,5).forEach(c => {
       if (!c.def) return;
-      const distractors = concepts.filter(x=>x.term!==c.term&&x.def).map(x=>x.def).slice(0,3);
-      while (distractors.length < 3) distractors.push("This term isn't covered in the notes.");
-      const opts = [c.def, ...distractors].sort(()=>Math.random()-0.5);
-      qs.push({ q:`What does "${c.term}" mean?`, answer:c.def, options:opts });
+      const d = concepts.filter(x=>x.term!==c.term&&x.def).map(x=>x.def).slice(0,3);
+      while(d.length<3) d.push("Not covered in these notes.");
+      qs.push({ q:`What does "${c.term}" mean?`, answer:c.def, options:[c.def,...d].sort(()=>Math.random()-0.5) });
     });
-    points.slice(0,4).forEach((p) => {
-      qs.push({ q:`True or false: "${p.substring(0,85)}${p.length>85?"...":""}"`, answer:"True", options:["True","False"] });
+    points.slice(0,3).forEach(p => {
+      qs.push({ q:`True or false: "${p.substring(0,72)}${p.length>72?"...":""}"`, answer:"True", options:["True","False"] });
     });
-    return qs.slice(0,7);
+    return qs.slice(0,6);
   };
 
-  const [questions]           = useState(buildQuestions);
-  const [current, setCurrent] = useState(0);
+  const [questions]             = useState(buildQ);
+  const [current, setCurrent]   = useState(0);
   const [selected, setSelected] = useState(null);
-  const [score, setScore]     = useState(0);
-  const [done, setDone]       = useState(false);
+  const [score, setScore]       = useState(0);
+  const [done, setDone]         = useState(false);
 
   if (!questions.length) return (
-    <p style={{ fontFamily:"'Crimson Pro',serif", fontSize:15, color:"var(--muted)", fontStyle:"italic" }}>
-      Not enough content to build a quiz yet — make sure your summary has key concepts.
-    </p>
+    <div style={{padding:"8px 0"}}>
+      <p style={{fontSize:13,color:"var(--muted)",marginBottom:10}}>Not enough content for a quiz yet.</p>
+      <button onClick={onClose} style={{fontSize:12,color:"var(--sage)",background:"none",border:"none",cursor:"pointer",padding:0}}>← Back to chat</button>
+    </div>
   );
 
   if (done) return (
-    <div className="pop-in" style={{ textAlign:"center", padding:"36px 0" }}>
-      <Mascot pose="welcome" size={90} style={{ animation:"float 2s ease infinite", marginBottom:12 }} />
-      <p style={{ fontFamily:"'Crimson Pro',serif", fontSize:26, fontStyle:"italic", marginBottom:6, color:"var(--ink)" }}>
-        Quiz complete!
-      </p>
-      <p style={{ fontSize:14, color:"var(--muted)", marginBottom:20 }}>
-        You scored <strong style={{color:"var(--sage)"}}>{score}</strong> out of {questions.length} 🎉
-      </p>
-      <button onClick={()=>{ setScore(0); setCurrent(0); setSelected(null); setDone(false); }}
-        style={{ fontFamily:"'Crimson Pro',serif", fontSize:15, fontStyle:"italic",
-          padding:"9px 28px", borderRadius:99, border:"1px solid var(--border)",
-          background:"transparent", color:"var(--ink)", cursor:"pointer" }}>
-        Try again
-      </button>
+    <div style={{textAlign:"center",padding:"12px 0"}}>
+      <p style={{fontSize:15,fontWeight:600,color:"var(--ink)",marginBottom:4}}>Quiz complete!</p>
+      <p style={{fontSize:13,color:"var(--muted)",marginBottom:14}}>Score: <strong style={{color:"var(--sage)"}}>{score}/{questions.length}</strong></p>
+      <div style={{display:"flex",gap:8,justifyContent:"center"}}>
+        <button onClick={()=>{setScore(0);setCurrent(0);setSelected(null);setDone(false);}}
+          style={{fontSize:12,padding:"6px 14px",borderRadius:8,border:"1.5px solid var(--border)",background:"none",color:"var(--ink)",cursor:"pointer"}}>Retry</button>
+        <button onClick={onClose}
+          style={{fontSize:12,padding:"6px 14px",borderRadius:8,border:"none",background:"var(--sage)",color:"#fff",cursor:"pointer"}}>← Chat</button>
+      </div>
     </div>
   );
 
   const q = questions[current];
-
   const pick = (opt) => {
     if (selected) return;
     setSelected(opt);
-    if (opt === q.answer) setScore(s=>s+1);
+    if (opt===q.answer) setScore(s=>s+1);
     setTimeout(() => {
-      if (current+1 >= questions.length) setDone(true);
+      if (current+1>=questions.length) setDone(true);
       else { setCurrent(c=>c+1); setSelected(null); }
-    }, 1100);
-  };
-
-  const getClass = (opt) => {
-    if (!selected) return "quiz-option";
-    if (opt === q.answer) return "quiz-option correct";
-    if (opt === selected) return "quiz-option wrong";
-    return "quiz-option";
+    }, 900);
   };
 
   return (
     <div>
-      {/* Progress bar */}
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
-        <span style={{ fontSize:12, color:"var(--muted)" }}>Question {current+1} of {questions.length}</span>
-        <div style={{ flex:1, height:3, background:"var(--border)", borderRadius:99, margin:"0 14px" }}>
-          <div style={{ height:"100%", background:"var(--yellow)", borderRadius:99,
-            width:`${(current/questions.length)*100}%`, transition:"width .4s" }} />
-        </div>
-        <span style={{ fontSize:12, color:"var(--muted)" }}>Score: {score}</span>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+        <span style={{fontSize:11,color:"var(--muted)"}}>Q{current+1}/{questions.length} · {score} correct</span>
+        <button onClick={onClose} style={{fontSize:11,color:"var(--muted)",background:"none",border:"none",cursor:"pointer"}}>← Chat</button>
       </div>
-
-      <p style={{ fontFamily:"'Crimson Pro',serif", fontSize:18, fontStyle:"italic",
-        color:"var(--ink)", marginBottom:18, lineHeight:1.5 }}>{q.q}</p>
-
-      {q.options.map((opt,i) => (
-        <button key={i} className={getClass(opt)} onClick={()=>pick(opt)}>
-          {opt}
-        </button>
-      ))}
-
+      <div style={{height:3,background:"var(--border)",borderRadius:99,marginBottom:12}}>
+        <div style={{height:"100%",background:"var(--sage)",borderRadius:99,width:`${(current/questions.length)*100}%`,transition:"width .4s"}} />
+      </div>
+      <p style={{fontSize:13,fontWeight:500,color:"var(--ink)",marginBottom:10,lineHeight:1.5}}>{q.q}</p>
+      {q.options.map((opt,i) => {
+        let cls = "quiz-opt";
+        if (selected) { if (opt===q.answer) cls+=" correct"; else if (opt===selected) cls+=" wrong"; }
+        return <button key={i} className={cls} onClick={()=>pick(opt)} disabled={!!selected}>{opt}</button>;
+      })}
       {selected && (
-        <p style={{ marginTop:12, fontSize:13, color: selected===q.answer?"var(--sage)":"var(--terra)",
-          fontFamily:"'DM Sans',sans-serif" }}>
-          {selected===q.answer ? "✓ Correct! Well done." : `✗ The correct answer was: "${q.answer}"`}
+        <p style={{marginTop:8,fontSize:12,color:selected===q.answer?"var(--sage)":"var(--terra)"}}>
+          {selected===q.answer ? "✓ Correct" : `✗ Answer: ${q.answer}`}
         </p>
       )}
     </div>
   );
 }
 
-/* ─── AI Chatbot with idle.gif ────────────────────────────────────────────── */
-function ChatBot({ summaryContext }) {
-  const [open, setOpen]       = useState(false);
-  const [msgs, setMsgs]       = useState([
-    { role:"ai", text:"Hey! I've read your notes 📖 Ask me anything about them — or say /quiz to jump to the quiz!" }
+function ChatBot({ summaryContext, concepts, points }) {
+  const [open, setOpen]     = useState(false);
+  const [mode, setMode]     = useState("chat");
+  const [msgs, setMsgs]     = useState([
+    { role:"ai", text:"Hi! I'm Ducky 🐣\nAsk me anything about your notes, or type /quiz to test yourself." }
   ]);
-  const [input, setInput]     = useState("");
+  const [input, setInput]   = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef();
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior:"smooth" });
-  }, [msgs, open]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({behavior:"smooth"}); }, [msgs, open, mode]);
 
-  const smartReply = (text) => {
-    const lower = text.toLowerCase().trim();
-    const ctx = (summaryContext || "").replace(/[📚✅🔑🧠📝🎯]/g,"");
-    const lines = ctx.split("\n").filter(l=>l.trim().length > 20);
+  const getReply = (text) => {
+    const q = text.toLowerCase().trim();
+    const raw = (summaryContext||"").replace(/[📚✅🔑🧠📝🎯]/g,"");
+    const lines = raw.split("\n").filter(l=>l.trim().length>20);
 
-    if (lower === "/quiz") return "Head to the 🎯 Quiz tab at the top of the page to test yourself!";
-    if (lower.includes("hello") || lower === "hi" || lower === "hey")
-      return "Hey there! 👋 I'm your study buddy. Ask me anything about what's in your notes!";
+    if (q==="/quiz") { setMode("quiz"); return null; }
+    if (["hi","hello","hey"].includes(q)) return "Hey! Ask me about any term or topic in your notes and I'll explain it clearly.";
+    if (q==="help"||q.includes("what can you do")) return "You can ask me:\n• What is [term]?\n• Explain [concept]\n• What should I know for the exam?\n• /quiz — start a quiz";
 
-    const keywords = lower.replace(/what is|explain|define|tell me about|how does|why is/g,"").trim().split(/\s+/);
-    const match = lines.find(l => keywords.some(k => k.length > 3 && l.toLowerCase().includes(k)));
-    if (match) return `Based on your notes: "${match.trim()}"`;
+    const concept = concepts.find(c => q.includes(c.term.toLowerCase()));
+    if (concept?.def) return `${concept.term}: ${concept.def}`;
 
-    if (lower.includes("tip") || lower.includes("remember") || lower.includes("exam"))
-      return "For your exam, focus on the Key Concepts panel on the right side of the page. Those are the most likely to come up. The quick tips section has some memory tricks too!";
-    if (lower.includes("summary") || lower.includes("overview"))
-      return lines[0] ? `Here's the gist: "${lines[0].trim()}"` : "Upload some notes and I'll give you a full summary!";
+    const keywords = q.replace(/what is|what are|explain|define|how does|how do|why|tell me about/g,"").trim().split(/\s+/).filter(k=>k.length>3);
+    const match = lines.find(l => keywords.some(k=>l.toLowerCase().includes(k)));
+    if (match) return match.trim();
 
-    return "Hmm, I'm not sure about that one. Try asking something more specific — like 'What is [concept name]?' or 'Explain [topic]'.";
+    if (q.includes("exam")||q.includes("test")||q.includes("revision"))
+      return "For the exam: check the Key Concepts sidebar on the right. Those are the most important terms. Type /quiz to test yourself.";
+    if (q.includes("summary")||q.includes("overview")||q.includes("topic"))
+      return lines[0] ? lines[0].trim() : "Upload notes first and I'll summarise them.";
+
+    return "I couldn't find that in your notes. Try asking 'What is [term]?' or 'Explain [concept]'.";
   };
 
   const send = async () => {
     const text = input.trim();
     if (!text) return;
     setInput("");
-    setMsgs(m => [...m, { role:"user", text }]);
+    setMsgs(m=>[...m,{role:"user",text}]);
     setLoading(true);
-    await new Promise(r => setTimeout(r, 600 + Math.random()*400));
-    const reply = smartReply(text);
-    setMsgs(m => [...m, { role:"ai", text: reply }]);
+    await new Promise(r=>setTimeout(r,350+Math.random()*250));
+    const r = getReply(text);
+    if (r !== null) setMsgs(m=>[...m,{role:"ai",text:r}]);
     setLoading(false);
   };
 
   return (
     <>
-      {/* Floating idle mascot button */}
-      <div style={{ position:"fixed", bottom:28, right:28, zIndex:200 }}>
-        {!open && (
-          <button onClick={()=>setOpen(true)} style={{
-            width:62, height:62, borderRadius:"50%",
-            background:"var(--paper)", border:"1.5px solid var(--border)",
-            cursor:"pointer", padding:4,
-            boxShadow:"0 4px 20px rgba(0,0,0,0.13)",
-            display:"flex", alignItems:"center", justifyContent:"center",
-            transition:"transform .2s, box-shadow .2s",
-          }}
-            onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.1)";e.currentTarget.style.boxShadow="0 6px 28px rgba(0,0,0,0.18)";}}
-            onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.boxShadow="0 4px 20px rgba(0,0,0,0.13)";}}>
-            <img src={MASCOT.idle} alt="Study buddy" style={{ width:46, height:46, objectFit:"contain" }} />
-          </button>
-        )}
-      </div>
+      {!open && (
+        <button onClick={()=>setOpen(true)} style={{
+          position:"fixed", bottom:24, right:24, zIndex:200,
+          width:56, height:56, borderRadius:"50%", padding:0,
+          background:"var(--paper)", border:"1.5px solid var(--border)",
+          cursor:"pointer", boxShadow:"0 4px 20px rgba(0,0,0,0.14)",
+          display:"flex", alignItems:"center", justifyContent:"center",
+          transition:"transform .2s, box-shadow .2s",
+        }}
+          onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.08)";e.currentTarget.style.boxShadow="0 6px 28px rgba(0,0,0,0.20)";}}
+          onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.boxShadow="0 4px 20px rgba(0,0,0,0.14)";}}>
+          <img src={MASCOT.idle} alt="Ducky" style={{width:40,height:40,objectFit:"contain"}} />
+        </button>
+      )}
 
-      {/* Chat panel */}
       {open && (
         <div style={{
-          position:"fixed", bottom:28, right:28, zIndex:200,
-          width:336, height:470, display:"flex", flexDirection:"column",
-          background:"var(--paper)", border:"1px solid var(--border)",
-          borderRadius:20, boxShadow:"0 8px 40px rgba(0,0,0,0.15)",
-          overflow:"hidden", animation:"fadeIn 0.2s ease both",
+          position:"fixed", bottom:24, right:24, zIndex:200,
+          width:316, height:450, display:"flex", flexDirection:"column",
+          background:"var(--paper)", border:"1.5px solid var(--border)",
+          borderRadius:18, overflow:"hidden",
+          boxShadow:"0 12px 48px rgba(0,0,0,0.18)",
+          animation:"popIn 0.2s ease both",
         }}>
-          {/* Header */}
-          <div style={{ padding:"13px 16px", borderBottom:"1px solid var(--border)",
-            display:"flex", alignItems:"center", gap:10, background:"var(--cream2)", flexShrink:0 }}>
-            <img src={MASCOT.idle} alt="bot" style={{ width:30, height:30, objectFit:"contain" }} />
-            <div style={{ flex:1 }}>
-              <p style={{ fontFamily:"'Crimson Pro',serif", fontSize:15, fontWeight:600, color:"var(--ink)", marginBottom:1 }}>Study Buddy</p>
-              <p style={{ fontSize:11, color:"var(--muted)" }}>Ask me about your notes</p>
+          <div style={{ padding:"11px 14px", borderBottom:"1px solid var(--border)",
+            display:"flex", alignItems:"center", gap:10, background:"var(--paper2)", flexShrink:0 }}>
+            <img src={MASCOT.idle} alt="" style={{width:26,height:26,objectFit:"contain"}} />
+            <div style={{flex:1}}>
+              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:600,color:"var(--ink)"}}>Ducky</p>
+              <p style={{fontSize:10,color:"var(--muted)"}}>Your study assistant</p>
             </div>
-            <button onClick={()=>setOpen(false)} style={{ background:"none", border:"none",
-              cursor:"pointer", fontSize:20, color:"var(--muted)", lineHeight:1, padding:"0 2px" }}>×</button>
+            <button onClick={()=>{setOpen(false);if(mode==="quiz")setMode("chat");}}
+              style={{background:"none",border:"none",cursor:"pointer",fontSize:18,color:"var(--muted)",lineHeight:1}}>×</button>
           </div>
 
-          {/* Messages */}
-          <div style={{ flex:1, overflowY:"auto", padding:"14px 13px 8px",
-            display:"flex", flexDirection:"column", gap:10 }}>
-            {msgs.map((m,i) => (
-              <div key={i} style={{ display:"flex", justifyContent:m.role==="user"?"flex-end":"flex-start",
-                alignItems:"flex-end", gap:7 }}>
-                {m.role==="ai" && (
-                  <img src={MASCOT.idle} alt="" style={{ width:22, height:22, objectFit:"contain", flexShrink:0, marginBottom:2 }} />
+          <div style={{flex:1,overflowY:"auto",padding:"12px 12px 8px",
+            display:"flex",flexDirection:"column",gap:8}}>
+            {mode==="quiz" ? (
+              <QuizInline concepts={concepts} points={points} onClose={()=>setMode("chat")} />
+            ) : (
+              <>
+                {msgs.map((m,i)=>(
+                  <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",alignItems:"flex-end",gap:6}}>
+                    {m.role==="ai" && <img src={MASCOT.idle} alt="" style={{width:20,height:20,objectFit:"contain",flexShrink:0,marginBottom:2}} />}
+                    <div className={m.role==="ai"?"chat-bubble-ai":"chat-bubble-user"} style={{whiteSpace:"pre-line"}}>{m.text}</div>
+                  </div>
+                ))}
+                {loading && (
+                  <div style={{display:"flex",alignItems:"flex-end",gap:6}}>
+                    <img src={MASCOT.idle} alt="" style={{width:20,height:20,objectFit:"contain"}} />
+                    <div className="chat-bubble-ai">
+                      <span style={{display:"flex",gap:4,alignItems:"center"}}>
+                        {[0,1,2].map(i=>(<span key={i} style={{width:5,height:5,borderRadius:"50%",background:"var(--muted)",display:"inline-block",animation:"pulse 1.2s ease infinite",animationDelay:`${i*0.2}s`}} />))}
+                      </span>
+                    </div>
+                  </div>
                 )}
-                <div className={m.role==="ai" ? "chat-bubble-ai" : "chat-bubble-user"}>
-                  {m.text}
-                </div>
-              </div>
-            ))}
-            {loading && (
-              <div style={{ display:"flex", alignItems:"flex-end", gap:7 }}>
-                <img src={MASCOT.processing} alt="" style={{ width:22, height:22, objectFit:"contain" }} />
-                <div className="chat-bubble-ai">
-                  <span style={{ display:"flex", gap:4, alignItems:"center" }}>
-                    {[0,1,2].map(i=>(
-                      <span key={i} style={{ width:6,height:6,borderRadius:"50%",background:"var(--muted)",
-                        display:"inline-block", animation:"pulse 1.2s ease infinite",
-                        animationDelay:`${i*0.2}s` }} />
-                    ))}
-                  </span>
-                </div>
-              </div>
+                <div ref={bottomRef} />
+              </>
             )}
-            <div ref={bottomRef} />
           </div>
 
-          {/* Input */}
-          <div style={{ padding:"10px 12px", borderTop:"1px solid var(--border)",
-            display:"flex", gap:8, alignItems:"center", flexShrink:0 }}>
-            <input className="chat-input" placeholder="Ask something, or type /quiz"
-              value={input} onChange={e=>setInput(e.target.value)}
-              onKeyDown={e=>e.key==="Enter"&&send()} style={{ flex:1 }} />
-            <button onClick={send} disabled={!input.trim()} style={{
-              background:"var(--sage)", border:"none", borderRadius:"50%",
-              width:32, height:32, cursor: input.trim()?"pointer":"not-allowed",
-              display:"flex", alignItems:"center", justifyContent:"center",
-              flexShrink:0, opacity: input.trim() ? 1 : 0.5, transition:"opacity .2s",
-            }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-              </svg>
-            </button>
-          </div>
+          {mode==="chat" && (
+            <div style={{padding:"10px 12px",borderTop:"1px solid var(--border)",display:"flex",gap:8,alignItems:"center",flexShrink:0}}>
+              <input className="chat-input" placeholder="Ask anything, or /quiz…"
+                value={input} onChange={e=>setInput(e.target.value)}
+                onKeyDown={e=>e.key==="Enter"&&send()} style={{flex:1}} />
+              <button onClick={send} disabled={!input.trim()} style={{
+                background:"var(--sage)",border:"none",borderRadius:"50%",
+                width:30,height:30,cursor:input.trim()?"pointer":"not-allowed",
+                display:"flex",alignItems:"center",justifyContent:"center",
+                flexShrink:0,opacity:input.trim()?1:0.45,transition:"opacity .2s",
+              }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </>
   );
 }
 
-/* ─── Summary page ────────────────────────────────────────────────────────── */
 function cleanRaw(text) {
   return text.split("").filter(c=>c.charCodeAt(0)<9000||c===" ").join("").replace(/\*\*/g,"").replace(/#{1,6} /g,"").trim();
 }
@@ -811,22 +732,19 @@ function SummaryPage({ data, fileNames, onBack }) {
   const [flipped, setFlipped] = useState(false);
   const [fcKnow,  setFcKnow]  = useState(0);
   const [fcDone,  setFcDone]  = useState(false);
-  const [tab, setTab]         = useState("summary");
 
   const raw = data?.summary || "";
-
-  function parseSection(heading) {
-    const regex = new RegExp(heading + "[^\\n]*\\n([\\s\\S]*?)(?=\\n[📚✅🔑🧠📝🎯]|$)", "i");
-    const m = raw.match(regex);
+  const parseSection = (h) => {
+    const m = raw.match(new RegExp(h+"[^\\n]*\\n([\\s\\S]*?)(?=\\n[📚✅🔑🧠📝🎯]|$)","i"));
     return m ? m[1].trim() : "";
-  }
+  };
+  const cleanText = t => t.replace(/[📚✅🔑🧠📝🎯★✦✓•]/g,"").replace(/\*\*/g,"").replace(/#{1,6} /g,"").trim();
 
   const topic = (() => {
     const s = parseSection("📚");
     return s.split("\n")[0]?.replace(/\*\*/g,"").trim() || "Your Summary";
   })();
 
-  const cleanText = t => t.replace(/[📚✅🔑🧠📝🎯★✦✓•]/g,"").replace(/\*\*/g,"").replace(/#{1,6} /g,"").trim();
   const explanation = cleanText(parseSection("🧠"));
   const examSummary = cleanText(parseSection("📝"));
   const tips        = cleanText(parseSection("🎯"));
@@ -838,328 +756,231 @@ function SummaryPage({ data, fileNames, onBack }) {
     .filter(l=>l.trim()).map(l=>{
       const c = l.replace(/^[-*•\d.]+\s*/,"").replace(/\*\*/g,"");
       const p = c.split(/[:\-–]/);
-      return { term:p[0]?.trim()||"", def:p.slice(1).join(":").trim()||"" };
+      return {term:p[0]?.trim()||"",def:p.slice(1).join(":").trim()||""};
     }).filter(c=>c.term);
 
   const flashcards = [
-    ...concepts.filter(c=>c.def).map(c=>({ q:`What is "${c.term}"?`, a:c.def })),
-    ...points.slice(0,6).map((p,i)=>({ q:`Explain key point ${i+1} in your own words.`, a:p })),
+    ...concepts.filter(c=>c.def).map(c=>({q:`What is "${c.term}"?`,a:c.def})),
+    ...points.slice(0,4).map((p,i)=>({q:`Explain key point ${i+1}.`,a:p})),
   ];
 
   const fcNext = (knew) => {
     if (knew) setFcKnow(k=>k+1);
-    if (fcIndex+1 >= flashcards.length) { setFcDone(true); return; }
+    if (fcIndex+1>=flashcards.length) { setFcDone(true); return; }
     setFcIndex(i=>i+1); setFlipped(false);
   };
 
-  const SLabel = ({ text }) => (
-    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
-      <div style={{ width:16, height:1, background:"var(--border)" }} />
-      <p style={{ fontSize:11, fontWeight:500, letterSpacing:"0.1em", textTransform:"uppercase",
-        color:"var(--muted)", fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap" }}>{text}</p>
-      <div style={{ flex:1, height:1, background:"var(--border)" }} />
-    </div>
-  );
-
   return (
     <>
-      <div className="fade-in" style={{ maxWidth:1060, margin:"0 auto",
-        padding:"48px 32px 120px", display:"grid", gridTemplateColumns:"1fr 300px", gap:60 }}>
+      <div className="fade-in" style={{maxWidth:1060,margin:"0 auto",padding:"44px 32px 100px",
+        display:"grid",gridTemplateColumns:"1fr 280px",gap:52}}>
 
-        {/* ── Left ── */}
         <div>
-          {/* Back + export */}
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
-            marginBottom:28, flexWrap:"wrap", gap:10 }}>
-            <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-              <button onClick={onBack} style={{ background:"none",border:"none",cursor:"pointer",
-                fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"var(--muted)",padding:0 }}>
-                ← New upload
-              </button>
+          {/* Top bar */}
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:28,flexWrap:"wrap",gap:10}}>
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",
+                fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"var(--muted)",padding:0}}>← New upload</button>
               {(fileNames||[]).map(n=>(
-                <span key={n} style={{ fontSize:11,color:"var(--muted)",padding:"2px 8px",
-                  borderRadius:99,border:"1px solid var(--border)" }}>{n}</span>
+                <span key={n} style={{fontSize:11,color:"var(--muted)",padding:"2px 8px",borderRadius:6,border:"1px solid var(--border)"}}>{n}</span>
               ))}
             </div>
-            <div style={{ display:"flex", gap:8 }}>
+            <div style={{display:"flex",gap:8}}>
               <CopyBtn text={cleanRaw(raw)} />
               <button onClick={()=>exportPDF(topic,raw)} style={{
-                background:"none",border:"1px solid var(--border)",borderRadius:8,
-                padding:"5px 10px",cursor:"pointer",color:"var(--muted)",
-                fontSize:12,fontFamily:"'DM Sans',sans-serif",
-                display:"flex",alignItems:"center",gap:5,
-              }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                background:"none",border:"1.5px solid var(--border)",borderRadius:8,
+                padding:"5px 12px",cursor:"pointer",color:"var(--muted)",
+                fontSize:12,fontFamily:"'DM Sans',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                   <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                Save as PDF
+                </svg>Save PDF
               </button>
             </div>
           </div>
 
-          <h1 style={{ fontFamily:"'Crimson Pro',serif", fontSize:"clamp(28px,4vw,48px)",
-            fontWeight:600, letterSpacing:"-0.03em", lineHeight:1.1, marginBottom:24, color:"var(--ink)" }}>
+          <h1 style={{fontFamily:"'Crimson Pro',serif",fontSize:"clamp(26px,3.5vw,44px)",
+            fontWeight:600,letterSpacing:"-0.03em",lineHeight:1.1,marginBottom:36,color:"var(--ink)"}}>
             {topic}
           </h1>
 
-          {/* Tab switcher */}
-          <div style={{ display:"flex", gap:4, marginBottom:32, background:"var(--cream2)",
-            borderRadius:12, padding:4, width:"fit-content" }}>
-            {[["summary","📖 Summary"],["quiz","🎯 Quiz me"]].map(([t,label]) => (
-              <button key={t} onClick={()=>setTab(t)} style={{
-                padding:"7px 20px", borderRadius:9, border:"none", cursor:"pointer",
-                fontFamily:"'DM Sans',sans-serif", fontSize:13, fontWeight:500,
-                background: tab===t ? "var(--paper)" : "transparent",
-                color: tab===t ? "var(--ink)" : "var(--muted)",
-                boxShadow: tab===t ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
-                transition:"all .2s",
-              }}>{label}</button>
-            ))}
-          </div>
-
-          {tab === "quiz" ? (
-            <QuizPanel concepts={concepts} points={points} />
-          ) : (
-            <>
-              {/* ── Simple Explanation ── */}
-              <SLabel text="Simple Explanation" />
-              <div style={{ marginBottom:36 }}>
-                {explanation.split("\n\n").filter(p=>p.trim()).map((para,i) => {
-                  const sentences = para.trim().split(/(?<=[.!?])\s+/).filter(Boolean);
-                  return (
-                    <p key={i} style={{
-                      fontSize:16, lineHeight:1.85, color:"var(--ink2)",
-                      fontWeight:400, marginBottom:16,
-                      fontFamily:"'DM Sans',sans-serif",
-                    }}>
-                      {sentences.map((s,si) => (
-                        <span key={si}>{s} </span>
-                      ))}
-                    </p>
-                  );
-                })}
+          {/* What this is about */}
+          {explanation && (
+            <div style={{marginBottom:36}}>
+              <STag>What this is about</STag>
+              <div style={{background:"var(--paper)",border:"1px solid var(--border)",
+                borderLeft:"3px solid var(--sage)",borderRadius:"0 12px 12px 0",padding:"18px 22px"}}>
+                {explanation.split("\n")
+                  .map(l=>l.replace(/^(Imagine |Think of |Like |Picture )/i,"").replace(/^[-*•]+\s*/,"").trim())
+                  .filter(l=>l.length>10)
+                  .map((line,i,arr)=>(
+                    <p key={i} style={{fontFamily:"'DM Sans',sans-serif",fontSize:14.5,
+                      lineHeight:1.85,color:"var(--ink2)",fontWeight:400,
+                      marginBottom:i<arr.length-1?10:0}}>{line}</p>
+                  ))}
               </div>
+            </div>
+          )}
 
-              <WavyLine />
-
-              {/* ── Exam Summary ── */}
-              <SLabel text="Exam Summary" />
-              <div style={{ marginBottom:36 }}>
-                {examSummary.split("\n").filter(l=>l.trim()).map((line,i) => {
-                  const clean = line.replace(/^[-*•\d.]+\s*/,"").trim();
-                  if (!clean) return null;
-                  return (
-                    <div key={i} style={{
-                      display:"flex", gap:14, alignItems:"flex-start",
-                      padding:"12px 0", borderBottom:"1px solid var(--border)",
-                    }}>
-                      <div style={{
-                        width:20, height:20, borderRadius:"50%",
-                        background:"var(--yellow)", opacity:0.85,
-                        display:"flex", alignItems:"center", justifyContent:"center",
-                        flexShrink:0, marginTop:2,
-                      }}>
-                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                          <polyline points="1.5 4.5 3.5 6.5 7.5 2.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
-                      <p style={{
-                        fontSize:15, lineHeight:1.75, color:"var(--ink2)",
-                        fontWeight:400, fontFamily:"'DM Sans',sans-serif",
-                      }}>{clean}</p>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <WavyLine />
-
-              {/* ── Quick Tips ── */}
-              {tips && (() => {
-                const tipLines = tips.split("\n").filter(l=>l.trim());
-                if (!tipLines.length) return null;
-                return (
-                  <>
-                    <SLabel text="Quick Tips" />
-                    <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:36 }}>
-                      {tipLines.map((t,i) => {
-                        const clean = t.replace(/^[-*•\d.★]+\s*/,"").trim();
-                        if (!clean) return null;
-                        return (
-                          <div key={i} style={{
-                            display:"flex", gap:12, alignItems:"flex-start",
-                            background:"var(--paper)", border:"1px solid var(--border)",
-                            borderRadius:12, padding:"13px 16px",
-                          }}>
-                            <span style={{
-                              width:24, height:24, borderRadius:8,
-                              background:"rgba(107,140,106,0.14)",
-                              display:"flex", alignItems:"center", justifyContent:"center",
-                              flexShrink:0, fontSize:12,
-                            }}>💡</span>
-                            <p style={{
-                              fontSize:14, lineHeight:1.7, color:"var(--ink2)",
-                              fontWeight:400, fontFamily:"'DM Sans',sans-serif",
-                            }}>{clean}</p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <WavyLine />
-                  </>
-                );
-              })()}
-
-              {/* ── Key Points ── */}
-              <SLabel text="Key Points" />
-              <div style={{ marginBottom:36 }}>
+          {/* Key points */}
+          {points.length > 0 && (
+            <div style={{marginBottom:36}}>
+              <STag>Key points</STag>
+              <div style={{background:"var(--paper)",border:"1px solid var(--border)",borderRadius:12,overflow:"hidden"}}>
                 {points.map((p,i)=>(
-                  <div key={i} className="fade-up" style={{
-                    animationDelay:`${i*0.05}s`,
-                    display:"flex", gap:16, padding:"14px 0",
-                    borderBottom:"1px solid var(--border)", alignItems:"flex-start",
-                  }}>
-                    <span style={{
-                      minWidth:28, height:28, borderRadius:8,
-                      background:"var(--cream2)", border:"1px solid var(--border)",
-                      display:"flex", alignItems:"center", justifyContent:"center",
-                      fontSize:12, fontWeight:600, color:"var(--muted)",
-                      flexShrink:0, fontFamily:"'DM Sans',sans-serif",
-                    }}>{i+1}</span>
-                    <p style={{
-                      fontSize:15, lineHeight:1.75, color:"var(--ink2)",
-                      fontWeight:400, fontFamily:"'DM Sans',sans-serif",
-                    }}>{p}</p>
+                  <div key={i} className="fade-up" style={{animationDelay:`${i*0.04}s`,
+                    display:"flex",alignItems:"flex-start",gap:16,padding:"14px 20px",
+                    borderBottom:i<points.length-1?"1px solid var(--border)":"none"}}>
+                    <span style={{fontSize:11,fontWeight:700,color:"var(--terra)",
+                      fontFamily:"'DM Sans',sans-serif",minWidth:18,marginTop:3,flexShrink:0}}>{i+1}.</span>
+                    <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:14.5,lineHeight:1.75,color:"var(--ink)",fontWeight:400,margin:0}}>{p}</p>
                   </div>
                 ))}
               </div>
-
-              <SLabel text="Review Cards" />
-              {flashcards.length === 0
-                ? <p style={{ fontFamily:"'Crimson Pro',serif",fontSize:16,color:"var(--muted)",fontStyle:"italic" }}>No flashcards generated.</p>
-                : fcDone ? (
-                  <div className="pop-in" style={{ textAlign:"center",padding:"40px 0" }}>
-                    <Mascot pose="welcome" size={100} style={{ animation:"float 2s ease infinite",marginBottom:12 }} />
-                    <p style={{ fontFamily:"'Crimson Pro',serif",fontSize:24,fontStyle:"italic",marginBottom:6,color:"var(--ink)" }}>All done!</p>
-                    <p style={{ fontSize:14,color:"var(--muted)",marginBottom:20 }}>
-                      {fcKnow} of {flashcards.length} cards marked as known
-                    </p>
-                    <button onClick={()=>{setFcIndex(0);setFlipped(false);setFcKnow(0);setFcDone(false);}}
-                      style={{ fontFamily:"'Crimson Pro',serif",fontSize:15,fontStyle:"italic",
-                        padding:"9px 28px",borderRadius:99,border:"1px solid var(--border)",
-                        background:"transparent",color:"var(--ink)",cursor:"pointer" }}>
-                      Go again
-                    </button>
-                  </div>
-                ) : (
-                  <div>
-                    <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16 }}>
-                      <span style={{ fontSize:12,color:"var(--muted)" }}>Card {fcIndex+1} of {flashcards.length}</span>
-                      <div style={{ flex:1,height:3,background:"var(--border)",borderRadius:99,margin:"0 16px" }}>
-                        <div style={{ height:"100%",background:"var(--sage)",borderRadius:99,
-                          width:`${(fcIndex/flashcards.length)*100}%`,transition:"width .4s" }} />
-                      </div>
-                      <span style={{ fontSize:12,color:"var(--muted)" }}>{Math.round((fcIndex/flashcards.length)*100)}%</span>
-                    </div>
-                    <div className="fc-scene" onClick={()=>setFlipped(f=>!f)}>
-                      <div className={flipped?"fc-inner is-flipped":"fc-inner"}>
-                        <div className="fc-front">
-                          <p style={{ fontSize:11,fontWeight:500,letterSpacing:"0.1em",textTransform:"uppercase",
-                            color:"var(--muted)",fontFamily:"'DM Sans',sans-serif",marginBottom:20 }}>
-                            Question {fcIndex+1}
-                          </p>
-                          <p style={{ fontFamily:"'Crimson Pro',serif",fontSize:22,fontStyle:"italic",lineHeight:1.6,color:"var(--ink)" }}>
-                            {flashcards[fcIndex].q}
-                          </p>
-                          <p style={{ marginTop:24,fontSize:11,color:"var(--muted)",fontFamily:"'DM Sans',sans-serif" }}>Tap to flip →</p>
-                        </div>
-                        <div className="fc-back">
-                          <p style={{ fontSize:11,fontWeight:500,letterSpacing:"0.1em",textTransform:"uppercase",
-                            color:"var(--muted)",fontFamily:"'DM Sans',sans-serif",marginBottom:20 }}>Answer</p>
-                          <p style={{ fontFamily:"'Crimson Pro',serif",fontSize:19,lineHeight:1.7,color:"var(--ink2)",fontWeight:300 }}>
-                            {flashcards[fcIndex].a}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div style={{ display:"flex",alignItems:"center",justifyContent:"center",gap:16,marginTop:16 }}>
-                      <button onClick={()=>fcNext(false)} style={{ background:"none",border:"1px solid var(--border)",borderRadius:10,
-                        padding:"10px 22px",cursor:"pointer",color:"var(--terra)",fontFamily:"'DM Sans',sans-serif",fontSize:14 }}>Skip</button>
-                      <button onClick={()=>setFlipped(f=>!f)} style={{ background:"none",border:"1px solid var(--border)",borderRadius:10,
-                        padding:"10px 22px",cursor:"pointer",color:"var(--ink2)",fontFamily:"'DM Sans',sans-serif",fontSize:14 }}>Flip</button>
-                      <button onClick={()=>fcNext(true)} style={{ background:"none",border:"1px solid rgba(107,140,106,0.4)",borderRadius:10,
-                        padding:"10px 22px",cursor:"pointer",color:"var(--sage)",fontFamily:"'DM Sans',sans-serif",fontSize:14 }}>Got it ✓</button>
-                    </div>
-                  </div>
-                )
-              }
-            </>
+            </div>
           )}
+
+          {/* For the exam */}
+          {examSummary && (
+            <div style={{marginBottom:36}}>
+              <STag>For the exam</STag>
+              <div style={{background:"var(--paper)",border:"1px solid var(--border)",
+                borderLeft:"3px solid var(--terra)",borderRadius:"0 12px 12px 0",padding:"18px 22px"}}>
+                {examSummary.split("\n").map(l=>l.replace(/^[-*•\d.]+\s*/,"").trim()).filter(l=>l.length>5)
+                  .map((line,i,arr)=>(
+                    <p key={i} style={{fontFamily:"'DM Sans',sans-serif",fontSize:14.5,
+                      lineHeight:1.8,color:"var(--ink2)",fontWeight:400,
+                      marginBottom:i<arr.length-1?10:0}}>{line}</p>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* Memory tips */}
+          {tips && (() => {
+            const tl = tips.split("\n").map(l=>l.replace(/^[-*•\d.★💡]+\s*/,"").trim()).filter(l=>l.length>8);
+            if (!tl.length) return null;
+            return (
+              <div style={{marginBottom:36}}>
+                <STag>Memory tips</STag>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {tl.map((t,i)=>(
+                    <div key={i} style={{display:"flex",gap:12,alignItems:"flex-start",
+                      background:"var(--paper)",border:"1px solid var(--border)",borderRadius:10,padding:"12px 16px"}}>
+                      <span style={{width:22,height:22,borderRadius:6,
+                        background:"rgba(78,122,76,0.12)",
+                        display:"flex",alignItems:"center",justifyContent:"center",
+                        flexShrink:0,fontSize:11,fontWeight:700,color:"var(--sage)",
+                        fontFamily:"'DM Sans',sans-serif"}}>
+                        {["A","B","C","D","E"][i]||i+1}
+                      </span>
+                      <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:14,lineHeight:1.7,color:"var(--ink2)",fontWeight:400,margin:0}}>{t}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Flashcards */}
+          <div>
+            <STag>Review cards</STag>
+            {flashcards.length===0
+              ? <p style={{fontSize:14,color:"var(--muted)"}}>No flashcards generated.</p>
+              : fcDone ? (
+                <div className="pop-in" style={{textAlign:"center",padding:"32px 0"}}>
+                  <p style={{fontFamily:"'Crimson Pro',serif",fontSize:22,fontStyle:"italic",marginBottom:6,color:"var(--ink)"}}>All done!</p>
+                  <p style={{fontSize:13,color:"var(--muted)",marginBottom:16}}>{fcKnow} of {flashcards.length} correct</p>
+                  <button onClick={()=>{setFcIndex(0);setFlipped(false);setFcKnow(0);setFcDone(false);}}
+                    style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:500,padding:"8px 24px",
+                      borderRadius:8,border:"1.5px solid var(--border)",background:"transparent",color:"var(--ink)",cursor:"pointer"}}>Go again</button>
+                </div>
+              ) : (
+                <div>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+                    <span style={{fontSize:12,color:"var(--muted)"}}>Card {fcIndex+1} / {flashcards.length}</span>
+                    <div style={{flex:1,height:2,background:"var(--border)",borderRadius:99,margin:"0 14px"}}>
+                      <div style={{height:"100%",background:"var(--sage)",borderRadius:99,width:`${(fcIndex/flashcards.length)*100}%`,transition:"width .4s"}} />
+                    </div>
+                    <span style={{fontSize:12,color:"var(--muted)"}}>{Math.round((fcIndex/flashcards.length)*100)}%</span>
+                  </div>
+                  <div className="fc-scene" onClick={()=>setFlipped(f=>!f)}>
+                    <div className={flipped?"fc-inner is-flipped":"fc-inner"}>
+                      <div className="fc-front">
+                        <p style={{fontSize:10,fontWeight:600,letterSpacing:"0.1em",textTransform:"uppercase",color:"var(--muted)",fontFamily:"'DM Sans',sans-serif",marginBottom:18}}>Question</p>
+                        <p style={{fontFamily:"'Crimson Pro',serif",fontSize:20,fontStyle:"italic",lineHeight:1.55,color:"var(--ink)"}}>{flashcards[fcIndex].q}</p>
+                        <p style={{marginTop:20,fontSize:11,color:"var(--muted)",fontFamily:"'DM Sans',sans-serif"}}>Tap to reveal →</p>
+                      </div>
+                      <div className="fc-back">
+                        <p style={{fontSize:10,fontWeight:600,letterSpacing:"0.1em",textTransform:"uppercase",color:"var(--muted)",fontFamily:"'DM Sans',sans-serif",marginBottom:18}}>Answer</p>
+                        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:14.5,lineHeight:1.7,color:"var(--ink2)",fontWeight:400}}>{flashcards[fcIndex].a}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginTop:14}}>
+                    <button onClick={()=>fcNext(false)} style={{background:"none",border:"1.5px solid var(--border)",borderRadius:8,padding:"9px 20px",cursor:"pointer",color:"var(--terra)",fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:500}}>Skip</button>
+                    <button onClick={()=>setFlipped(f=>!f)} style={{background:"none",border:"1.5px solid var(--border)",borderRadius:8,padding:"9px 20px",cursor:"pointer",color:"var(--ink2)",fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:500}}>Flip</button>
+                    <button onClick={()=>fcNext(true)} style={{background:"var(--sage)",border:"none",borderRadius:8,padding:"9px 20px",cursor:"pointer",color:"#fff",fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:500}}>Got it ✓</button>
+                  </div>
+                </div>
+              )
+            }
+          </div>
         </div>
 
-        {/* ── Right — Key Concepts ── */}
-        <div style={{ position:"sticky", top:80, alignSelf:"start" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
-            <div style={{ width:16, height:1, background:"var(--border)" }} />
-            <p style={{ fontSize:11, fontWeight:500, letterSpacing:"0.1em", textTransform:"uppercase",
-              color:"var(--muted)", fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap" }}>Key Concepts</p>
-            <div style={{ flex:1, height:1, background:"var(--border)" }} />
-          </div>
-          {concepts.length === 0
-            ? <p style={{ fontFamily:"'Crimson Pro',serif",fontSize:15,color:"var(--muted)",fontStyle:"italic" }}>No concepts found.</p>
+        {/* Right — Key Concepts */}
+        <div style={{position:"sticky",top:72,alignSelf:"start"}}>
+          <STag>Key concepts</STag>
+          {concepts.length===0
+            ? <p style={{fontSize:14,color:"var(--muted)"}}>No concepts found.</p>
             : concepts.map((c,i)=>(
-              <div key={i} className="fade-up" style={{ animationDelay:`${i*0.07}s`,
-                paddingBottom:14,marginBottom:14,borderBottom:"1px solid var(--border)" }}>
-                <p style={{ fontFamily:"'Crimson Pro',serif",fontSize:17,fontWeight:600,color:"var(--ink)",marginBottom:4 }}>{c.term}</p>
-                <p style={{ fontFamily:"'DM Sans',sans-serif",fontSize:13,lineHeight:1.65,color:"var(--ink2)",fontWeight:300 }}>{c.def}</p>
+              <div key={i} className="fade-up" style={{animationDelay:`${i*0.05}s`,
+                padding:"12px 0",borderBottom:i<concepts.length-1?"1px solid var(--border)":"none"}}>
+                <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:600,color:"var(--ink)",marginBottom:4}}>{c.term}</p>
+                <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:12.5,lineHeight:1.65,color:"var(--ink2)",fontWeight:400}}>{c.def}</p>
               </div>
             ))
           }
         </div>
       </div>
 
-      <ChatBot summaryContext={raw} />
+      <ChatBot summaryContext={raw} concepts={concepts} points={points} />
     </>
   );
 }
 
-/* ─── History page ────────────────────────────────────────────────────────── */
 function HistoryPage({ onOpen }) {
-  const history = JSON.parse(localStorage.getItem("el_history") || "[]");
+  const history = JSON.parse(localStorage.getItem("el_history")||"[]");
   return (
-    <div style={{ maxWidth:720, margin:"0 auto", padding:"56px 32px 100px" }}>
-      <h1 style={{ fontFamily:"'Crimson Pro',serif",fontSize:38,fontWeight:600,
-        fontStyle:"italic",letterSpacing:"-0.03em",marginBottom:40,color:"var(--ink)" }}>Past uploads</h1>
-      {history.length === 0 ? (
-        <div style={{ textAlign:"center",padding:"60px 0" }}>
-          <Mascot pose="sleeping" size={160} />
-          <p style={{ fontFamily:"'Crimson Pro',serif",fontSize:22,fontStyle:"italic",
-            color:"var(--muted)",marginTop:16 }}>Nothing here yet</p>
-          <p style={{ fontSize:13,color:"var(--muted)",marginTop:8 }}>Upload something to get started</p>
+    <div style={{maxWidth:660,margin:"0 auto",padding:"56px 32px 100px"}}>
+      <h1 style={{fontFamily:"'Crimson Pro',serif",fontSize:36,fontWeight:600,fontStyle:"italic",
+        letterSpacing:"-0.03em",marginBottom:36,color:"var(--ink)"}}>Past uploads</h1>
+      {history.length===0 ? (
+        <div style={{textAlign:"center",padding:"60px 0"}}>
+          <Mascot pose="sleeping" size={130} />
+          <p style={{fontFamily:"'Crimson Pro',serif",fontSize:20,fontStyle:"italic",color:"var(--muted)",marginTop:16}}>Nothing here yet</p>
+          <p style={{fontSize:13,color:"var(--muted)",marginTop:6}}>Upload something to get started</p>
         </div>
-      ) : history.map((h,i) => (
-        <div key={h.id||i} className="fade-up" style={{ animationDelay:`${i*0.05}s` }}>
+      ) : history.map((h,i)=>(
+        <div key={h.id||i} className="fade-up" style={{animationDelay:`${i*0.04}s`}}>
           <div onClick={()=>onOpen(h)}
-            style={{ display:"flex",alignItems:"baseline",justifyContent:"space-between",
-              padding:"16px 0",cursor:"pointer",gap:16,transition:"padding-left .2s" }}
+            style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",
+              padding:"16px 0",cursor:"pointer",gap:16,transition:"padding-left .18s"}}
             onMouseEnter={e=>e.currentTarget.style.paddingLeft="8px"}
             onMouseLeave={e=>e.currentTarget.style.paddingLeft="0px"}>
-            <div style={{ flex:1,minWidth:0 }}>
-              <div style={{ display:"flex",flexWrap:"wrap",gap:5,marginBottom:4 }}>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:4}}>
                 {(h.fileNames||[]).map(n=>(
-                  <span key={n} style={{ fontFamily:"'Crimson Pro',serif",fontSize:17,
-                    fontWeight:600,color:"var(--ink)" }}>{n}</span>
+                  <span key={n} style={{fontFamily:"'Crimson Pro',serif",fontSize:16,fontWeight:600,color:"var(--ink)"}}>{n}</span>
                 ))}
               </div>
-              <p style={{ fontSize:13,color:"var(--muted)",overflow:"hidden",
-                textOverflow:"ellipsis",whiteSpace:"nowrap" }}>
-                {(h.summary||"").replace(/[📚✅🔑🧠📝🎯\*]/g,"").substring(0,90)}...
+              <p style={{fontSize:13,color:"var(--muted)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                {(h.summary||"").replace(/[📚✅🔑🧠📝🎯\*]/g,"").substring(0,88)}…
               </p>
             </div>
-            <div style={{ display:"flex",alignItems:"center",gap:12,flexShrink:0 }}>
-              <span style={{ fontSize:12,color:"var(--muted)" }}>{h.date}</span>
-              <span style={{ fontFamily:"'Crimson Pro',serif",fontSize:16,color:"var(--muted)" }}>→</span>
+            <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+              <span style={{fontSize:11,color:"var(--muted)"}}>{h.date}</span>
+              <span style={{fontSize:14,color:"var(--muted)"}}>→</span>
             </div>
           </div>
           <WavyLine />
@@ -1169,81 +990,48 @@ function HistoryPage({ onOpen }) {
   );
 }
 
-/* ─── About page ──────────────────────────────────────────────────────────── */
 function AboutPage({ setPage }) {
   return (
-    <div style={{ maxWidth:680, margin:"0 auto", padding:"60px 32px 100px" }}>
-      <div style={{ display:"flex",alignItems:"center",gap:24,marginBottom:40 }}>
-        <Mascot pose="welcome" size={100} style={{ animation:"float 3.5s ease infinite",flexShrink:0 }} />
-        <div>
-          <h1 style={{ fontFamily:"'Crimson Pro',serif",fontSize:40,fontWeight:600,
-            fontStyle:"italic",letterSpacing:"-0.03em",marginBottom:8,color:"var(--ink)" }}>
-            Meet EasyLearn
-          </h1>
-          <p style={{ fontSize:14,color:"var(--muted)",lineHeight:1.6 }}>Your personal AI study companion</p>
-        </div>
-      </div>
+    <div style={{maxWidth:620,margin:"0 auto",padding:"60px 32px 100px"}}>
+      <h1 style={{fontFamily:"'Crimson Pro',serif",fontSize:36,fontWeight:600,fontStyle:"italic",
+        letterSpacing:"-0.03em",marginBottom:8,color:"var(--ink)"}}>Meet EasyLearn</h1>
+      <p style={{fontSize:14,color:"var(--muted)",lineHeight:1.6,marginBottom:32}}>Your personal AI study companion</p>
       <WavyLine />
-      <div style={{ marginBottom:36 }}>
-        <p style={{ fontSize:11,fontWeight:500,letterSpacing:"0.1em",textTransform:"uppercase",
-          color:"var(--muted)",marginBottom:14 }}>The story</p>
-        <p style={{ fontFamily:"'Crimson Pro',serif",fontSize:19,lineHeight:1.85,color:"var(--ink2)",fontWeight:300 }}>
-          Studying is hard. Textbooks are dense. Notes get messy. And exam season always feels too short.
-          EasyLearn was built to fix that — upload your notes and get back something you can actually
-          understand and remember.
+      <div style={{marginBottom:28}}>
+        <p style={{fontSize:10,fontWeight:600,letterSpacing:"0.12em",textTransform:"uppercase",color:"var(--muted)",marginBottom:12}}>The story</p>
+        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:15,lineHeight:1.85,color:"var(--ink2)",fontWeight:400}}>
+          Studying is hard. Textbooks are dense. Notes get messy. EasyLearn reads your material and turns it into a structured summary you can actually understand — fast.
         </p>
       </div>
       <WavyLine />
-      <div style={{ marginBottom:36 }}>
-        <p style={{ fontSize:11,fontWeight:500,letterSpacing:"0.1em",textTransform:"uppercase",
-          color:"var(--muted)",marginBottom:20 }}>How it works</p>
-        <div style={{ display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:20 }}>
+      <div style={{marginBottom:28}}>
+        <p style={{fontSize:10,fontWeight:600,letterSpacing:"0.12em",textTransform:"uppercase",color:"var(--muted)",marginBottom:14}}>How it works</p>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
           {[
-            { num:"01", title:"Upload", desc:"Drop any PDF, photo or handwritten notes." },
-            { num:"02", title:"AI reads it", desc:"It extracts all the key information automatically." },
-            { num:"03", title:"You learn", desc:"Get a clear summary, flashcards and a quiz." },
+            {num:"01",title:"Upload",desc:"PDF, photo or handwritten notes."},
+            {num:"02",title:"AI reads it",desc:"Extracts key info automatically."},
+            {num:"03",title:"You learn",desc:"Summary, flashcards and quiz."},
           ].map(s=>(
-            <div key={s.num} style={{ padding:"20px",borderRadius:14,
-              border:"1px solid var(--border)",background:"var(--paper)" }}>
-              <p style={{ fontFamily:"'Crimson Pro',serif",fontSize:26,fontStyle:"italic",
-                color:"var(--border)",marginBottom:8 }}>{s.num}</p>
-              <p style={{ fontFamily:"'Crimson Pro',serif",fontSize:17,fontWeight:600,marginBottom:6,color:"var(--ink)" }}>{s.title}</p>
-              <p style={{ fontSize:13,color:"var(--muted)",lineHeight:1.6 }}>{s.desc}</p>
+            <div key={s.num} style={{padding:"16px",borderRadius:12,border:"1px solid var(--border)",background:"var(--paper)"}}>
+              <p style={{fontFamily:"'Crimson Pro',serif",fontSize:22,fontStyle:"italic",color:"var(--border)",marginBottom:8}}>{s.num}</p>
+              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:600,marginBottom:4,color:"var(--ink)"}}>{s.title}</p>
+              <p style={{fontSize:12,color:"var(--muted)",lineHeight:1.55}}>{s.desc}</p>
             </div>
           ))}
         </div>
       </div>
       <WavyLine />
-      <div style={{ marginBottom:36 }}>
-        <p style={{ fontSize:11,fontWeight:500,letterSpacing:"0.1em",textTransform:"uppercase",
-          color:"var(--muted)",marginBottom:14 }}>Under the hood</p>
-        <p style={{ fontFamily:"'Crimson Pro',serif",fontSize:18,lineHeight:1.85,color:"var(--ink2)",fontWeight:300 }}>
-          Everything runs on your own machine. Your files never leave your computer.
-          PDFs are read with pdfplumber, handwritten notes with Tesseract OCR, and
-          summaries are generated by a local AI model running via Ollama.
-          Your history is stored in a local MongoDB database.
-        </p>
-      </div>
-      <WavyLine />
-      <div style={{ textAlign:"center",paddingTop:16 }}>
-        <p style={{ fontFamily:"'Crimson Pro',serif",fontSize:22,fontStyle:"italic",color:"var(--ink2)",marginBottom:20 }}>
-          Ready to study smarter?
-        </p>
+      <div style={{textAlign:"center",paddingTop:8}}>
         <button onClick={()=>setPage("upload")} style={{
-          fontFamily:"'Crimson Pro',serif",fontSize:18,fontStyle:"italic",
-          padding:"12px 36px",borderRadius:99,border:"1.5px solid var(--ink)",
-          background:"transparent",color:"var(--ink)",cursor:"pointer",transition:"all .2s",
-        }}
-          onMouseEnter={e=>{e.target.style.background="var(--ink)";e.target.style.color="var(--cream)";}}
-          onMouseLeave={e=>{e.target.style.background="transparent";e.target.style.color="var(--ink)";}}>
-          Start uploading →
-        </button>
+          fontFamily:"'DM Sans',sans-serif",fontSize:14,fontWeight:600,
+          padding:"12px 36px",borderRadius:10,border:"none",
+          background:"var(--ink)",color:"var(--cream)",cursor:"pointer",transition:"all .2s",
+        }}>Start uploading →</button>
       </div>
     </div>
   );
 }
 
-/* ─── Root App ────────────────────────────────────────────────────────────── */
 export default function App() {
   const [page,         setPage]        = useState(()=>localStorage.getItem("el_user")?"upload":"login");
   const [user,         setUser]        = useState(()=>JSON.parse(localStorage.getItem("el_user")||"null"));
@@ -1257,13 +1045,11 @@ export default function App() {
     setUser(null); setPage("login");
   };
   const handleResult = (data, fileNames) => {
-    const entry = {
-      id:Date.now(), fileNames, summary:data.summary,
-      date:new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}),
-    };
-    const history = JSON.parse(localStorage.getItem("el_history")||"[]");
-    history.unshift(entry);
-    localStorage.setItem("el_history", JSON.stringify(history.slice(0,50)));
+    const entry = {id:Date.now(),fileNames,summary:data.summary,
+      date:new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})};
+    const hist = JSON.parse(localStorage.getItem("el_history")||"[]");
+    hist.unshift(entry);
+    localStorage.setItem("el_history",JSON.stringify(hist.slice(0,50)));
     setSummaryData(data); setSummaryFiles(fileNames); setPage("summary");
   };
   const handleOpenHistory = h => {
@@ -1273,7 +1059,7 @@ export default function App() {
   return (
     <>
       <GlobalStyle dark={dark} />
-      <div style={{ position:"relative", zIndex:1, minHeight:"100vh" }}>
+      <div style={{position:"relative",zIndex:1,minHeight:"100vh"}}>
         <Navbar page={page} setPage={setPage} user={user} onLogout={handleLogout} dark={dark} onToggleDark={toggleDark} />
         {page==="login"   && <AuthPage onAuth={handleAuth} />}
         {page==="upload"  && <UploadPage onResult={handleResult} user={user} />}
