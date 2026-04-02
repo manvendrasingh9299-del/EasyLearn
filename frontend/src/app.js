@@ -35,18 +35,18 @@ const GlobalStyle = ({ dark }) => (
     *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
 
     :root {
-      --cream:  ${dark ? "#0F1829" : "#EEE6D6"};
-      --cream2: ${dark ? "#151F35" : "#E6DCCB"};
-      --paper:  ${dark ? "#1A2540" : "#FBF8F2"};
-      --ink:    ${dark ? "#E8E0D0" : "#2C2416"};
-      --ink2:   ${dark ? "#B8A99A" : "#5C5040"};
-      --muted:  ${dark ? "#6B7FA0" : "#9C8E7E"};
-      --border: ${dark ? "#2A3A58" : "#D8CFBF"};
+      --cream:  ${dark ? "#12112A" : "#F0E8D8"};
+      --cream2: ${dark ? "#1C1A3A" : "#EAE0CC"};
+      --paper:  ${dark ? "#201E40" : "#FBF8F2"};
+      --ink:    ${dark ? "#E8E2F4" : "#2C2416"};
+      --ink2:   ${dark ? "#B0A8CC" : "#5C5040"};
+      --muted:  ${dark ? "#6A6490" : "#9C8E7E"};
+      --border: ${dark ? "#302C58" : "#D8CFBF"};
       --terra:  ${dark ? "#E8845A" : "#C4694A"};
       --sage:   ${dark ? "#7BB87A" : "#6B8C6A"};
       --dusty:  ${dark ? "#7BAED4" : "#6B8CAE"};
       --yellow: ${dark ? "#E8C060" : "#D4A843"};
-      --nav-bg: ${dark ? "rgba(15,24,41,0.92)" : "rgba(238,230,214,0.92)"};
+      --nav-bg: ${dark ? "rgba(18,17,42,0.93)" : "rgba(234,224,204,0.93)"};
     }
 
     html { scroll-behavior:smooth; }
@@ -57,22 +57,23 @@ const GlobalStyle = ({ dark }) => (
       -webkit-font-smoothing:antialiased;
       transition: background-color 0.4s ease;
       ${dark ? `
-        background-color: #0F1829;
+        background-color: #12112A;
         background-image:
-          radial-gradient(circle at 75% 8%,  rgba(100,140,220,0.12) 0%, transparent 45%),
-          radial-gradient(circle at 10% 85%, rgba(60,100,180,0.10)  0%, transparent 40%),
-          radial-gradient(circle at 90% 70%, rgba(80,60,160,0.08)   0%, transparent 35%),
-          radial-gradient(#1E2D50 0.85px, transparent 0.85px);
-        background-size: auto, auto, auto, 28px 28px;
+          radial-gradient(ellipse at 20% 0%,   rgba(138,100,210,0.18) 0%, transparent 55%),
+          radial-gradient(ellipse at 85% 15%,  rgba(80,120,230,0.14)  0%, transparent 50%),
+          radial-gradient(ellipse at 5%  70%,  rgba(60,90,200,0.12)   0%, transparent 45%),
+          radial-gradient(ellipse at 90% 85%,  rgba(110,70,190,0.10)  0%, transparent 40%),
+          radial-gradient(ellipse at 50% 50%,  rgba(25,22,55,0.6)     0%, transparent 75%);
         background-attachment: fixed;
       ` : `
-        background-color: #EEE6D6;
+        background-color: #EBE2D0;
         background-image:
-          radial-gradient(ellipse at 18% 14%, rgba(196,105,74,0.18)  0%, transparent 48%),
-          radial-gradient(ellipse at 88% 10%, rgba(212,168,67,0.14)  0%, transparent 42%),
-          radial-gradient(ellipse at 6%  78%, rgba(107,140,106,0.13) 0%, transparent 44%),
-          radial-gradient(ellipse at 92% 85%, rgba(196,105,74,0.10)  0%, transparent 38%),
-          radial-gradient(ellipse at 50% 50%, rgba(245,235,210,0.55) 0%, transparent 70%);
+          radial-gradient(ellipse at 8%   12%, rgba(196,105,74,0.22)  0%, transparent 40%),
+          radial-gradient(ellipse at 92%  8%,  rgba(212,168,67,0.18)  0%, transparent 38%),
+          radial-gradient(ellipse at 5%   72%, rgba(107,140,106,0.16) 0%, transparent 42%),
+          radial-gradient(ellipse at 95%  78%, rgba(196,105,74,0.14)  0%, transparent 36%),
+          radial-gradient(ellipse at 50%  42%, rgba(240,230,210,0.70) 0%, transparent 60%),
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
         background-attachment: fixed;
       `}
     }
@@ -921,86 +922,115 @@ function SummaryPage({ data, fileNames, onBack }) {
             <QuizPanel concepts={concepts} points={points} />
           ) : (
             <>
-              {/* ── Simple Explanation card ── */}
+              {/* ── Simple Explanation ── */}
               <SLabel text="Simple Explanation" />
-              <div style={{
-                background:"var(--paper)", border:"1px solid var(--border)",
-                borderRadius:16, padding:"24px 28px", marginBottom:32,
-                borderLeft:"4px solid var(--sage)",
-              }}>
-                {explanation.split("\n\n").filter(p=>p.trim()).map((p,i) => (
-                  <p key={i} style={{
-                    fontFamily:"'DM Sans',sans-serif", fontSize:15, lineHeight:1.8,
-                    color:"var(--ink2)", fontWeight:400, marginBottom: i < explanation.split("\n\n").length-1 ? 14 : 0,
-                  }}>{p.trim()}</p>
-                ))}
+              <div style={{ marginBottom:36 }}>
+                {explanation.split("\n\n").filter(p=>p.trim()).map((para,i) => {
+                  const sentences = para.trim().split(/(?<=[.!?])\s+/).filter(Boolean);
+                  return (
+                    <p key={i} style={{
+                      fontSize:16, lineHeight:1.85, color:"var(--ink2)",
+                      fontWeight:400, marginBottom:16,
+                      fontFamily:"'DM Sans',sans-serif",
+                    }}>
+                      {sentences.map((s,si) => (
+                        <span key={si}>{s} </span>
+                      ))}
+                    </p>
+                  );
+                })}
               </div>
 
-              {/* ── Exam Summary card ── */}
+              <WavyLine />
+
+              {/* ── Exam Summary ── */}
               <SLabel text="Exam Summary" />
-              <div style={{
-                background:"var(--paper)", border:"1px solid var(--border)",
-                borderRadius:16, padding:"24px 28px", marginBottom:32,
-                borderLeft:"4px solid var(--yellow)",
-              }}>
+              <div style={{ marginBottom:36 }}>
                 {examSummary.split("\n").filter(l=>l.trim()).map((line,i) => {
                   const clean = line.replace(/^[-*•\d.]+\s*/,"").trim();
                   if (!clean) return null;
                   return (
-                    <div key={i} style={{ display:"flex", gap:12, alignItems:"flex-start",
-                      marginBottom: i < examSummary.split("\n").filter(l=>l.trim()).length-1 ? 12 : 0 }}>
-                      <span style={{ width:6, height:6, borderRadius:"50%", background:"var(--yellow)",
-                        flexShrink:0, marginTop:7 }} />
-                      <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:15, lineHeight:1.75,
-                        color:"var(--ink2)", fontWeight:400 }}>{clean}</p>
+                    <div key={i} style={{
+                      display:"flex", gap:14, alignItems:"flex-start",
+                      padding:"12px 0", borderBottom:"1px solid var(--border)",
+                    }}>
+                      <div style={{
+                        width:20, height:20, borderRadius:"50%",
+                        background:"var(--yellow)", opacity:0.85,
+                        display:"flex", alignItems:"center", justifyContent:"center",
+                        flexShrink:0, marginTop:2,
+                      }}>
+                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                          <polyline points="1.5 4.5 3.5 6.5 7.5 2.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <p style={{
+                        fontSize:15, lineHeight:1.75, color:"var(--ink2)",
+                        fontWeight:400, fontFamily:"'DM Sans',sans-serif",
+                      }}>{clean}</p>
                     </div>
                   );
                 })}
               </div>
 
-              {/* ── Quick Tips card ── */}
-              {tips && (
-                <>
-                  <SLabel text="Quick Tips" />
-                  <div style={{
-                    background:"var(--paper)", border:"1px solid var(--border)",
-                    borderRadius:16, padding:"20px 24px", marginBottom:32,
-                    display:"flex", flexDirection:"column", gap:10,
-                  }}>
-                    {tips.split("\n").filter(l=>l.trim()).map((t,i)=>{
-                      const clean = t.replace(/^[-*•\d.★]+\s*/,"").trim();
-                      if (!clean) return null;
-                      return (
-                        <div key={i} style={{
-                          display:"flex", gap:12, alignItems:"flex-start",
-                          padding:"10px 14px", borderRadius:10,
-                          background:"rgba(107,140,106,0.07)", border:"1px solid rgba(107,140,106,0.15)",
-                        }}>
-                          <span style={{ fontSize:16, flexShrink:0, marginTop:1 }}>💡</span>
-                          <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:14,
-                            lineHeight:1.7, color:"var(--ink2)", fontWeight:400 }}>{clean}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
+              <WavyLine />
 
-              {/* ── Key Points list ── */}
+              {/* ── Quick Tips ── */}
+              {tips && (() => {
+                const tipLines = tips.split("\n").filter(l=>l.trim());
+                if (!tipLines.length) return null;
+                return (
+                  <>
+                    <SLabel text="Quick Tips" />
+                    <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:36 }}>
+                      {tipLines.map((t,i) => {
+                        const clean = t.replace(/^[-*•\d.★]+\s*/,"").trim();
+                        if (!clean) return null;
+                        return (
+                          <div key={i} style={{
+                            display:"flex", gap:12, alignItems:"flex-start",
+                            background:"var(--paper)", border:"1px solid var(--border)",
+                            borderRadius:12, padding:"13px 16px",
+                          }}>
+                            <span style={{
+                              width:24, height:24, borderRadius:8,
+                              background:"rgba(107,140,106,0.14)",
+                              display:"flex", alignItems:"center", justifyContent:"center",
+                              flexShrink:0, fontSize:12,
+                            }}>💡</span>
+                            <p style={{
+                              fontSize:14, lineHeight:1.7, color:"var(--ink2)",
+                              fontWeight:400, fontFamily:"'DM Sans',sans-serif",
+                            }}>{clean}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <WavyLine />
+                  </>
+                );
+              })()}
+
+              {/* ── Key Points ── */}
               <SLabel text="Key Points" />
-              <div style={{ marginBottom:32 }}>
+              <div style={{ marginBottom:36 }}>
                 {points.map((p,i)=>(
-                  <div key={i} className="fade-up" style={{ animationDelay:`${i*0.05}s`,
+                  <div key={i} className="fade-up" style={{
+                    animationDelay:`${i*0.05}s`,
                     display:"flex", gap:16, padding:"14px 0",
-                    borderBottom:"1px solid var(--border)", alignItems:"flex-start" }}>
+                    borderBottom:"1px solid var(--border)", alignItems:"flex-start",
+                  }}>
                     <span style={{
-                      fontFamily:"'DM Sans',sans-serif", fontSize:11, fontWeight:500,
-                      color:"var(--paper)", background:"var(--terra)",
-                      borderRadius:6, padding:"2px 7px", flexShrink:0, marginTop:3,
-                      letterSpacing:"0.04em",
-                    }}>{String(i+1).padStart(2,"0")}</span>
-                    <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:15,
-                      lineHeight:1.7, color:"var(--ink2)", fontWeight:400 }}>{p}</p>
+                      minWidth:28, height:28, borderRadius:8,
+                      background:"var(--cream2)", border:"1px solid var(--border)",
+                      display:"flex", alignItems:"center", justifyContent:"center",
+                      fontSize:12, fontWeight:600, color:"var(--muted)",
+                      flexShrink:0, fontFamily:"'DM Sans',sans-serif",
+                    }}>{i+1}</span>
+                    <p style={{
+                      fontSize:15, lineHeight:1.75, color:"var(--ink2)",
+                      fontWeight:400, fontFamily:"'DM Sans',sans-serif",
+                    }}>{p}</p>
                   </div>
                 ))}
               </div>

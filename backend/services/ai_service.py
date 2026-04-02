@@ -7,49 +7,56 @@ from config import OLLAMA_URL, AI_MODEL
 # Prompt Templates
 # ---------------------------------------------------------------------------
 
-CHUNK_SUMMARY_PROMPT = """You are a friendly study helper. Read the text below and pull out the most important facts as short, simple bullet points. Write like you are texting a friend — short sentences, easy words, no complicated terms.
+CHUNK_SUMMARY_PROMPT = """Read the text below. Extract the most important facts as short bullet points.
+Be direct. No filler words. No examples. Just the facts.
 
 Text:
 {content}
 
-Key facts (bullet points, max 10 words each):"""
+Facts (bullet points, one sentence each):"""
 
 
-FINAL_SUMMARY_PROMPT = """You are EasyLearn — a chill, friendly study buddy who makes hard topics feel easy. A student just uploaded their study notes. Your job is to explain everything so clearly that even someone who knows NOTHING about this topic can understand it.
+FINAL_SUMMARY_PROMPT = """You are a study assistant. A student uploaded their notes. Write a structured summary.
 
-Rules:
-- Write like you are talking to a friend, not writing an essay
-- Use short sentences. Maximum 20 words per sentence.
-- Replace every complicated word with a simpler one
-- Use "you" and "your" to feel personal
-- Give real life examples — things students actually see every day
-- No academic language. No passive voice. Keep it human.
+Rules — follow exactly:
+- Write in plain English. Short sentences only.
+- No storytelling. No "Imagine..." sentences. No analogies.
+- No emojis anywhere in the text content.
+- Do not say "In conclusion", "Overall", "In summary".
+- Be direct. Every sentence must teach something.
+- Maximum 20 words per sentence.
 
-Study content:
+Content:
 {content}
 
 ---
 
-Reply in EXACTLY this format, including the emojis as section markers:
+Reply using EXACTLY these section markers (keep the emoji markers — they are used for formatting only):
 
 📚 TOPIC
-One sentence. What is this whole thing about? Keep it under 15 words.
+One sentence. What subject is this? Be specific.
 
 ✅ IMPORTANT POINTS
-Write exactly 6 bullet points. Each one is one sentence. Max 20 words each. Start each with "- ". Use the simplest words possible.
+Exactly 6 bullet points. Start each with "- ".
+Each point is one clear factual sentence. Max 18 words each.
+No filler. No repetition.
 
 🔑 KEY CONCEPTS
-List up to 8 important words or ideas. For each one write: the word, then a colon, then explain it in one simple sentence like you are explaining to a 12 year old. Example format:
-- Photosynthesis: How plants make their own food using sunlight, like a tiny food factory inside every leaf.
+Up to 8 terms. Format each as:
+- Term: One sentence definition. Plain English. No jargon unless explained.
 
 🧠 SIMPLE EXPLANATION
-Write 5 sentences maximum. Explain the whole topic using a real life example or story the student can picture. Start with "Imagine..." or "Think of it like..." Make it click. Be warm and friendly.
+4 sentences maximum. Explain what this topic is and why it matters.
+Do NOT start with "Imagine" or "Think of". Start with a direct factual statement.
+No analogies. No stories.
 
 📝 EXAM SUMMARY
-Write 3 sentences only. The most important things to remember for the exam. Short, punchy, memorable.
+3 sentences. The most important things to know for the exam.
+Direct. Factual. Memorable.
 
 🎯 QUICK TIPS TO REMEMBER
-Give 3 memory tricks. Can be a rhyme, acronym, silly story or visual trick. Keep each tip under 2 sentences.
+3 tips. Each is a short sentence with a concrete memory technique.
+Can use acronyms, patterns, or connections — but no silly stories.
 """
 
 # ---------------------------------------------------------------------------
@@ -57,13 +64,13 @@ Give 3 memory tricks. Can be a rhyme, acronym, silly story or visual trick. Keep
 # ---------------------------------------------------------------------------
 
 async def generate_chunk_summary(content: str, timeout: float = 300.0) -> str:
-    """Generate simple bullet-point extraction from a single chunk."""
+    """Extract key facts from a single chunk."""
     prompt = CHUNK_SUMMARY_PROMPT.format(content=content)
     return await _call_ollama(prompt, timeout)
 
 
 async def generate_final_summary(merged_content: str, timeout: float = 600.0) -> str:
-    """Generate the full friendly study summary from all merged chunks."""
+    """Generate the full structured summary from all merged chunks."""
     prompt = FINAL_SUMMARY_PROMPT.format(content=merged_content)
     return await _call_ollama(prompt, timeout)
 
