@@ -9,3 +9,4 @@ uploads/
 *.log
 .idea/
 .vscode/
+start.sh
