@@ -255,6 +255,7 @@ function AuthPage({ onAuth }) {
     <div style={{ minHeight:"86vh", display:"flex", alignItems:"center", justifyContent:"center", padding:"40px 24px" }}>
       <div className="auth-card fade-up">
         <div style={{ textAlign:"center", marginBottom:28 }}>
+          <Mascot pose="welcome" size={90} style={{ animation:"float 3s ease infinite", marginBottom:12 }} />
           <h1 style={{ fontFamily:"'Crimson Pro',serif", fontSize:26, fontStyle:"italic",
             fontWeight:600, color:"var(--ink)", letterSpacing:"-0.02em" }}>
             {mode==="login" ? "Welcome back" : "Create your account"}
@@ -340,6 +341,9 @@ function UploadPage({ onResult }) {
   return (
     <div style={{ maxWidth:600, margin:"0 auto", padding:"64px 24px 80px" }}>
       <div className="fade-up" style={{ marginBottom:36 }}>
+        <div style={{ display:"flex", justifyContent:"flex-end", marginBottom:-20 }}>
+          <Mascot pose="idle" size={88} style={{ animation:"float 3s ease infinite" }} />
+        </div>
         <h1 style={{ fontFamily:"'Crimson Pro',serif", fontSize:"clamp(26px,4vw,40px)",
           fontWeight:600, fontStyle:"italic", letterSpacing:"-0.03em", color:"var(--ink)", marginBottom:8 }}>
           Upload your notes
@@ -420,6 +424,8 @@ function ProcessingPage({ step, stepIdx, totalSteps, fileNames }) {
   return (
     <div style={{ minHeight:"88vh", display:"flex", flexDirection:"column",
       alignItems:"center", justifyContent:"center", gap:32, padding:"40px 24px" }}>
+
+      <Mascot pose="processing" size={150} style={{ animation:"float 2.2s ease infinite" }} />
 
       <div style={{ position:"relative", width:96, height:96 }}>
         <div style={{ position:"absolute", top:"50%", left:"50%",
@@ -804,83 +810,89 @@ function SummaryPage({ data, fileNames, onBack }) {
             {topic}
           </h1>
 
-          {/* What this is about */}
-          {explanation && (
-            <div style={{marginBottom:36}}>
-              <STag>What this is about</STag>
-              <div style={{background:"var(--paper)",border:"1px solid var(--border)",
-                borderLeft:"3px solid var(--sage)",borderRadius:"0 12px 12px 0",padding:"18px 22px"}}>
-                {explanation.split("\n")
-                  .map(l=>l.replace(/^(Imagine |Think of |Like |Picture )/i,"").replace(/^[-*•]+\s*/,"").trim())
-                  .filter(l=>l.length>10)
-                  .map((line,i,arr)=>(
-                    <p key={i} style={{fontFamily:"'DM Sans',sans-serif",fontSize:14.5,
-                      lineHeight:1.85,color:"var(--ink2)",fontWeight:400,
-                      marginBottom:i<arr.length-1?10:0}}>{line}</p>
-                  ))}
-              </div>
+          {/* ── Simple Explanation ── */}
+          {explanation && (<>
+            <STag>Simple Explanation</STag>
+            <div style={{marginBottom:8}}>
+              {explanation.split("\n\n").filter(p=>p.trim()).map((para,i)=>(
+                <p key={i} style={{fontFamily:"'Crimson Pro',serif",fontSize:18,lineHeight:1.9,
+                  color:"var(--ink2)",fontWeight:300,marginBottom:14}}>{para.trim()}</p>
+              ))}
             </div>
-          )}
+            <WavyLine />
+          </>)}
 
-          {/* Key points */}
-          {points.length > 0 && (
-            <div style={{marginBottom:36}}>
-              <STag>Key points</STag>
-              <div style={{background:"var(--paper)",border:"1px solid var(--border)",borderRadius:12,overflow:"hidden"}}>
-                {points.map((p,i)=>(
-                  <div key={i} className="fade-up" style={{animationDelay:`${i*0.04}s`,
-                    display:"flex",alignItems:"flex-start",gap:16,padding:"14px 20px",
-                    borderBottom:i<points.length-1?"1px solid var(--border)":"none"}}>
-                    <span style={{fontSize:11,fontWeight:700,color:"var(--terra)",
-                      fontFamily:"'DM Sans',sans-serif",minWidth:18,marginTop:3,flexShrink:0}}>{i+1}.</span>
-                    <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:14.5,lineHeight:1.75,color:"var(--ink)",fontWeight:400,margin:0}}>{p}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* For the exam */}
-          {examSummary && (
-            <div style={{marginBottom:36}}>
-              <STag>For the exam</STag>
-              <div style={{background:"var(--paper)",border:"1px solid var(--border)",
-                borderLeft:"3px solid var(--terra)",borderRadius:"0 12px 12px 0",padding:"18px 22px"}}>
-                {examSummary.split("\n").map(l=>l.replace(/^[-*•\d.]+\s*/,"").trim()).filter(l=>l.length>5)
-                  .map((line,i,arr)=>(
-                    <p key={i} style={{fontFamily:"'DM Sans',sans-serif",fontSize:14.5,
-                      lineHeight:1.8,color:"var(--ink2)",fontWeight:400,
-                      marginBottom:i<arr.length-1?10:0}}>{line}</p>
-                  ))}
-              </div>
-            </div>
-          )}
-
-          {/* Memory tips */}
-          {tips && (() => {
-            const tl = tips.split("\n").map(l=>l.replace(/^[-*•\d.★💡]+\s*/,"").trim()).filter(l=>l.length>8);
-            if (!tl.length) return null;
-            return (
-              <div style={{marginBottom:36}}>
-                <STag>Memory tips</STag>
-                <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                  {tl.map((t,i)=>(
-                    <div key={i} style={{display:"flex",gap:12,alignItems:"flex-start",
-                      background:"var(--paper)",border:"1px solid var(--border)",borderRadius:10,padding:"12px 16px"}}>
-                      <span style={{width:22,height:22,borderRadius:6,
-                        background:"rgba(78,122,76,0.12)",
-                        display:"flex",alignItems:"center",justifyContent:"center",
-                        flexShrink:0,fontSize:11,fontWeight:700,color:"var(--sage)",
-                        fontFamily:"'DM Sans',sans-serif"}}>
-                        {["A","B","C","D","E"][i]||i+1}
-                      </span>
-                      <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:14,lineHeight:1.7,color:"var(--ink2)",fontWeight:400,margin:0}}>{t}</p>
+          {/* ── Exam Summary ── */}
+          {examSummary && (<>
+            <STag>Exam Summary</STag>
+            <div style={{marginBottom:8}}>
+              {examSummary.split("\n").filter(l=>l.trim()).map((line,i)=>{
+                const clean = line.replace(/^[-*•\d.]+\s*/,"").trim();
+                if(!clean) return null;
+                return(
+                  <div key={i} style={{display:"flex",gap:14,alignItems:"flex-start",
+                    padding:"11px 0",borderBottom:"1px solid var(--border)"}}>
+                    <div style={{width:20,height:20,borderRadius:"50%",
+                      background:"var(--yellow)",opacity:0.85,flexShrink:0,marginTop:2,
+                      display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                        <polyline points="1.5 4.5 3.5 6.5 7.5 2.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
                     </div>
-                  ))}
-                </div>
+                    <p style={{fontFamily:"'Crimson Pro',serif",fontSize:17,lineHeight:1.75,
+                      color:"var(--ink2)",fontWeight:300}}>{clean}</p>
+                  </div>
+                );
+              })}
+            </div>
+            <WavyLine />
+          </>)}
+
+          {/* ── Quick Tips ── */}
+          {tips && (() => {
+            const tipLines = tips.split("\n").filter(l=>l.trim());
+            if(!tipLines.length) return null;
+            return(<>
+              <STag>Quick Tips</STag>
+              <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:8}}>
+                {tipLines.map((t,i)=>{
+                  const clean = t.replace(/^[-*•\d.★💡]+\s*/,"").trim();
+                  if(!clean) return null;
+                  return(
+                    <div key={i} style={{display:"flex",gap:12,alignItems:"flex-start",
+                      background:"var(--paper2)",border:"1px solid var(--border)",
+                      borderRadius:12,padding:"13px 16px"}}>
+                      <span style={{fontSize:16,flexShrink:0,marginTop:1,lineHeight:1}}>💡</span>
+                      <p style={{fontFamily:"'Crimson Pro',serif",fontSize:17,lineHeight:1.7,
+                        color:"var(--ink2)",fontWeight:300}}>{clean}</p>
+                    </div>
+                  );
+                })}
               </div>
-            );
+              <WavyLine />
+            </>);
           })()}
+
+          {/* ── Key Points ── */}
+          {points.length > 0 && (<>
+            <STag>Key Points</STag>
+            <div style={{marginBottom:8}}>
+              {points.map((p,i)=>(
+                <div key={i} className="fade-up" style={{animationDelay:`${i*0.05}s`,
+                  display:"flex",gap:16,padding:"13px 0",
+                  borderBottom:"1px solid var(--border)",alignItems:"flex-start"}}>
+                  <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:600,
+                    color:"var(--paper)",background:"var(--terra)",borderRadius:5,
+                    padding:"2px 6px",flexShrink:0,marginTop:3,letterSpacing:"0.03em"}}>
+                    {String(i+1).padStart(2,"0")}
+                  </span>
+                  <p style={{fontFamily:"'Crimson Pro',serif",fontSize:17,lineHeight:1.7,
+                    color:"var(--ink2)",fontWeight:300}}>{p}</p>
+                </div>
+              ))}
+            </div>
+            <WavyLine />
+          </>)}
 
           {/* Flashcards */}
           <div>
