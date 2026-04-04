@@ -1,8 +1,8 @@
 # services/ai_service.py
 #
 # Dual-model pipeline:
-#   Mistral  -> chunk extraction  (precise, factual)
-#   Llama 3  -> final summary     (clear, structured, student-friendly)
+#   Mistral  -> chunk extraction  (precise, factual, fast)
+#   Llama 3  -> final summary + chat  (clear, natural English)
 
 import httpx
 from config import OLLAMA_URL, AI_MODEL
@@ -10,14 +10,16 @@ from config import OLLAMA_URL, AI_MODEL
 EXTRACTION_MODEL = "mistral"
 SUMMARY_MODEL    = "llama3"
 
-CHUNK_PROMPT = """You are a precise study note extractor. Read the text and pull out every important fact.
+# ── Chunk extraction prompt (Mistral) ─────────────────────────────────────────
+CHUNK_PROMPT = """\
+Extract every important fact from the text below.
 
-Rules:
-- One fact per bullet point. Start each with "- "
-- Maximum 20 words per bullet point
-- Only include information that is in the text — do not add anything extra
-- Use plain English. If a term is technical, include it as-is — do not simplify it
-- No introductions, no summaries, no conclusions
+Output rules:
+- One fact per line, starting with "- "
+- Max 20 words per line
+- Only use information from the text — nothing extra
+- Keep technical terms exactly as written
+- No intro, no conclusion, just the facts
 
 Text:
 {content}
@@ -25,63 +27,105 @@ Text:
 Facts:"""
 
 
-FINAL_PROMPT = """You are a study assistant writing a structured summary for a student.
-The student needs to understand this topic clearly and quickly.
+# ── Final summary prompt (Llama 3) ────────────────────────────────────────────
+FINAL_PROMPT = """\
+Write a structured study summary from the bullet points below.
 
-Hard rules — follow every single one:
-1. Simple sentences. Maximum 18 words per sentence.
-2. No storytelling. No "Imagine..." or "Think of it like..." sentences.
-3. No emojis inside text — only the section marker emojis below.
-4. No filler: no "In this section", "As we can see", "It is worth noting".
-5. Plain English. If you use a technical term, define it in the same sentence.
-6. Write in second person where it helps — use "you" and "your".
-7. Simple Explanation: write like a clear, direct textbook paragraph.
-8. Exam Summary: 3 short sentences a student can memorise in one read.
+Writing rules (follow every one):
+- Short sentences — max 18 words each
+- Plain English — explain any technical term in the same sentence
+- No storytelling, no analogies, no "Imagine..." sentences
+- No filler phrases ("it is important to note", "as we can see")
+- No emojis inside text — only the section markers shown below
+- Direct and factual — every sentence must add new information
+- Write in second person ("you", "your") where it helps
 
-Study material:
+Source material:
 {content}
 
 ---
-Write EXACTLY in this format. Keep the emoji markers exactly as shown:
+Use EXACTLY this format. Keep the emoji section markers:
 
 📚 TOPIC
-One sentence only. Name the exact topic. Be specific, not vague.
+One sentence. The specific subject. Be precise.
 
 ✅ IMPORTANT POINTS
-Exactly 6 bullet points. Each starts with "- ".
-Each is one complete, factual sentence. Maximum 18 words each. No repetition between points.
+6 bullet points. Each starts with "- ".
+One factual sentence per point. Max 18 words. No repetition.
 
 🔑 KEY CONCEPTS
-Up to 8 terms. Format each as:
-- Term: Plain English definition. One sentence. Maximum 20 words.
+Up to 8 terms. One per line:
+- Term: Definition in one plain sentence. Max 20 words.
 
 🧠 SIMPLE EXPLANATION
-4 to 5 sentences. Explain what this topic is, how it works, and why it matters.
-Start with a direct factual statement — not a question, not an analogy, not "Imagine".
-Each sentence adds new information. No padding. No repetition.
+4-5 sentences. What this topic is, how it works, why it matters.
+Start with a direct statement. No stories. No analogies.
+Each sentence adds new information.
 
 📝 EXAM SUMMARY
-Exactly 3 sentences. Short and memorable.
-These are the 3 most important facts a student must know for an exam.
+3 sentences only. Short and memorable.
+The 3 most important facts for an exam.
 
 🎯 QUICK TIPS TO REMEMBER
-Give 3 memory aids. Each is 1 to 2 sentences.
-Use acronyms, patterns, comparisons or simple rules — not stories or rhymes.
+3 memory aids. 1-2 sentences each.
+Acronyms, patterns, comparisons — no silly stories.
 """
 
 
+# ── Chat prompt (Llama 3) ──────────────────────────────────────────────────────
+CHAT_PROMPT = """\
+You are Ducky, a helpful AI study assistant inside EasyLearn.
+{context_section}
+Answer the student's question clearly and helpfully.
+
+Rules:
+- Give direct, useful answers — never say "I don't know"
+- Keep answers focused and concise
+- Use bullet points for lists
+- Plain English — explain technical terms simply
+- If the notes don't cover the question, answer from your general knowledge
+
+Student: {message}
+Ducky:"""
+
+
+# ── Core functions ─────────────────────────────────────────────────────────────
+
 async def generate_chunk_summary(content: str, timeout: float = 300.0) -> str:
-    """Mistral extracts raw facts from one chunk."""
-    return await _call_ollama(CHUNK_PROMPT.format(content=content), EXTRACTION_MODEL, timeout)
+    """Mistral extracts raw facts from one text chunk."""
+    return await _call_ollama(
+        CHUNK_PROMPT.format(content=content),
+        model=EXTRACTION_MODEL,
+        timeout=timeout,
+    )
 
 
 async def generate_final_summary(merged_content: str, timeout: float = 600.0) -> str:
-    """Llama 3 writes the final structured summary from extracted facts."""
-    return await _call_ollama(FINAL_PROMPT.format(content=merged_content), SUMMARY_MODEL, timeout)
+    """Llama 3 writes the final structured summary."""
+    return await _call_ollama(
+        FINAL_PROMPT.format(content=merged_content),
+        model=SUMMARY_MODEL,
+        timeout=timeout,
+    )
+
+
+async def generate_chat_reply(message: str, context: str = "", timeout: float = 60.0) -> str:
+    """Llama 3 answers a student's chat question, with optional notes context."""
+    context_section = (
+        f"You have access to the student's uploaded notes:\n\n{context[:2500]}\n\n"
+        f"Use these notes as your primary source when relevant."
+        if context.strip()
+        else "No notes have been uploaded yet — answer from your general knowledge."
+    )
+    prompt = CHAT_PROMPT.format(
+        context_section=context_section,
+        message=message,
+    )
+    return await _call_ollama(prompt, model=SUMMARY_MODEL, timeout=timeout)
 
 
 async def _call_ollama(prompt: str, model: str, timeout: float = 300.0) -> str:
-    """Call Ollama with fallback to AI_MODEL if model not found."""
+    """Call Ollama. Falls back to AI_MODEL from config if model is not found."""
     payload = {"model": model, "prompt": prompt, "stream": False}
 
     try:
@@ -90,12 +134,12 @@ async def _call_ollama(prompt: str, model: str, timeout: float = 300.0) -> str:
             r.raise_for_status()
         data = r.json()
         if "response" not in data:
-            raise KeyError(f"Unexpected Ollama response: {list(data.keys())}")
+            raise KeyError(f"Unexpected Ollama response keys: {list(data.keys())}")
         return data["response"].strip()
 
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 404 and model != AI_MODEL:
-            print(f"Model '{model}' not found, falling back to '{AI_MODEL}'")
+            print(f"⚠️  Model '{model}' not found — falling back to '{AI_MODEL}'")
             payload["model"] = AI_MODEL
             async with httpx.AsyncClient(timeout=timeout) as client:
                 r = await client.post(OLLAMA_URL, json=payload)
