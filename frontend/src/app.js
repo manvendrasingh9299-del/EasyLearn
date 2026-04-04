@@ -111,10 +111,10 @@ const GlobalStyle = ({ dark }) => (
     .fc-back  { background:var(--paper2); border:1.5px solid var(--border); transform:rotateY(180deg); }
 
     .chat-bubble-ai {
-      background:var(--paper); border:1px solid var(--border);
-      border-radius:16px 16px 16px 4px; padding:10px 14px;
+      background:var(--paper2); border:1px solid var(--border);
+      border-radius:4px 16px 16px 16px; padding:12px 16px;
       font-size:13px; color:var(--ink); line-height:1.65;
-      animation:chatSlide 0.25s ease both; max-width:88%;
+      animation:chatSlide 0.25s ease both; max-width:90%;
     }
     .chat-bubble-user {
       background:var(--sage); border-radius:16px 16px 4px 16px;
@@ -122,12 +122,13 @@ const GlobalStyle = ({ dark }) => (
       animation:chatSlide 0.25s ease both; max-width:82%; align-self:flex-end;
     }
     .chat-input {
-      width:100%; padding:10px 16px; border:1.5px solid var(--border);
-      border-radius:99px; background:var(--paper);
+      width:100%; padding:9px 14px; border:1.5px solid var(--border);
+      border-radius:12px; background:var(--paper2);
       font-family:'DM Sans',sans-serif; font-size:13px; color:var(--ink);
-      outline:none; transition:border-color .2s;
+      outline:none; transition:border-color .2s, box-shadow .2s;
+      line-height:1.5; resize:none;
     }
-    .chat-input:focus { border-color:var(--sage); }
+    .chat-input:focus { border-color:var(--sage); box-shadow:0 0 0 3px rgba(78,122,76,0.10); }
     .chat-input::placeholder { color:var(--muted); }
 
     .quiz-opt {
@@ -427,27 +428,6 @@ function ProcessingPage({ step, stepIdx, totalSteps, fileNames }) {
 
       <Mascot pose="processing" size={150} style={{ animation:"float 2.2s ease infinite" }} />
 
-      <div style={{ position:"relative", width:96, height:96 }}>
-        <div style={{ position:"absolute", top:"50%", left:"50%",
-          transform:"translate(-50%,-50%)", width:14, height:14,
-          borderRadius:"50%", background:"var(--sage)", opacity:0.9 }} />
-        <svg width="96" height="96" style={{ position:"absolute", top:0, left:0 }}>
-          <circle cx="48" cy="48" r="40" fill="none" stroke="var(--border)" strokeWidth="1" />
-          <circle cx="48" cy="48" r="40" fill="none" stroke="var(--sage)" strokeWidth="1.5"
-            strokeDasharray="55 196" strokeLinecap="round"
-            style={{ animation:"spin 2s linear infinite", transformOrigin:"48px 48px" }} />
-        </svg>
-        <div style={{ position:"absolute", top:"50%", left:"50%", marginTop:-5, marginLeft:-5,
-          width:10, height:10, borderRadius:"50%", background:"var(--terra)",
-          animation:"orbitA 2s linear infinite" }} />
-        <div style={{ position:"absolute", top:"50%", left:"50%", marginTop:-4, marginLeft:-4,
-          width:8, height:8, borderRadius:"50%", background:"var(--yellow)",
-          animation:"orbitB 1.5s linear infinite" }} />
-        <div style={{ position:"absolute", top:"50%", left:"50%", marginTop:-3, marginLeft:-3,
-          width:6, height:6, borderRadius:"50%", background:"var(--dusty)",
-          animation:"orbitC 1s linear infinite" }} />
-      </div>
-
       <div style={{ textAlign:"center", maxWidth:300 }}>
         <p key={step} style={{ fontFamily:"'DM Sans',sans-serif", fontSize:15, fontWeight:500,
           color:"var(--ink)", marginBottom:16, animation:"fadeIn 0.4s ease both" }}>{step}</p>
@@ -595,129 +575,370 @@ function QuizInline({ concepts, points, onClose }) {
 }
 
 function ChatBot({ summaryContext, concepts, points }) {
-  const [open, setOpen]     = useState(false);
-  const [mode, setMode]     = useState("chat");
-  const [msgs, setMsgs]     = useState([
-    { role:"ai", text:"Hi! I'm Ducky 🐣\nAsk me anything about your notes, or type /quiz to test yourself." }
-  ]);
-  const [input, setInput]   = useState("");
+  const [open, setOpen]       = useState(false);
+  const [mode, setMode]       = useState("chat");
+  const [msgs, setMsgs]       = useState([]);
+  const [input, setInput]     = useState("");
   const [loading, setLoading] = useState(false);
+  const [hasSummary]          = useState(() => !!(summaryContext && summaryContext.trim().length > 50));
   const bottomRef = useRef();
+  const inputRef  = useRef();
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({behavior:"smooth"}); }, [msgs, open, mode]);
+  // Build a clean knowledge base from the uploaded notes
+  const notesKB = (() => {
+    if (!summaryContext) return "";
+    return summaryContext
+      .replace(/[📚✅🔑🧠📝🎯]/g, "")
+      .replace(/\*\*/g, "")
+      .replace(/#{1,6} /g, "")
+      .trim();
+  })();
 
-  const getReply = (text) => {
+  // Greeting shown when panel first opens
+  const greeting = hasSummary
+    ? "Hi, I'm Ducky — your AI study assistant.\n\nI've read your uploaded notes and I'm ready to help. Ask me anything — whether it's about your notes or a general question. I'll do my best to give you a clear, useful answer."
+    : "Hi, I'm Ducky — your AI study assistant.\n\nI can answer general questions on any topic, help you understand concepts, or give exam tips. Upload your notes and I'll also answer questions directly from them.";
+
+  useEffect(() => {
+    if (open && msgs.length === 0) {
+      setMsgs([{ role: "ai", text: greeting }]);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [msgs, open, loading]);
+
+  useEffect(() => {
+    if (open && mode === "chat") {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [open, mode]);
+
+  // ── Call backend Ollama via the chat endpoint ──────────────────────────────
+  const callAI = async (userMessage) => {
+    const token = localStorage.getItem("el_token");
+
+    // Build a context-aware prompt
+    const systemContext = notesKB
+      ? `You are Ducky, a friendly and knowledgeable AI study assistant embedded in EasyLearn.
+The student has uploaded notes. Use them as your primary source when relevant.
+If the question is not covered in the notes, answer from your own knowledge — you are a capable AI like ChatGPT.
+Always give clear, direct, helpful answers in plain English.
+Keep answers concise but complete. Use bullet points when listing multiple items.
+Never say "I don't know" — always provide the best answer you can.
+
+--- Student's uploaded notes ---
+${notesKB.substring(0, 3000)}
+--- End of notes ---`
+      : `You are Ducky, a friendly and knowledgeable AI study assistant embedded in EasyLearn.
+Answer any question the student asks — you are a capable AI like ChatGPT.
+Give clear, direct, helpful answers in plain English.
+Keep answers concise but complete. Use bullet points when listing multiple items.
+Never say "I don't know" — always provide the best answer you can.`;
+
+    const fullPrompt = `${systemContext}
+
+Student: ${userMessage}
+Ducky:`;
+
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ message: userMessage, context: fullPrompt }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        return data.reply || data.message || data.response || "I couldn't get a response. Please try again.";
+      }
+      throw new Error("endpoint_unavailable");
+    } catch {
+      // No backend chat endpoint yet — fallback to smart local reply
+      return localReply(userMessage);
+    }
+  };
+
+  // ── Smart local fallback (when no /chat endpoint exists yet) ──────────────
+  const localReply = (text) => {
     const q = text.toLowerCase().trim();
-    const raw = (summaryContext||"").replace(/[📚✅🔑🧠📝🎯]/g,"");
-    const lines = raw.split("\n").filter(l=>l.trim().length>20);
+    if (q === "/quiz") { setMode("quiz"); return null; }
 
-    if (q==="/quiz") { setMode("quiz"); return null; }
-    if (["hi","hello","hey"].includes(q)) return "Hey! Ask me about any term or topic in your notes and I'll explain it clearly.";
-    if (q==="help"||q.includes("what can you do")) return "You can ask me:\n• What is [term]?\n• Explain [concept]\n• What should I know for the exam?\n• /quiz — start a quiz";
+    // Greetings
+    if (["hi","hello","hey","morning","hiya"].includes(q))
+      return "Hey there! What would you like to know? I can explain concepts from your notes, answer general questions, or start a quiz — just ask.";
 
-    const concept = concepts.find(c => q.includes(c.term.toLowerCase()));
-    if (concept?.def) return `${concept.term}: ${concept.def}`;
+    // Help menu
+    if (q === "help" || q.includes("what can you") || q.includes("what do you"))
+      return "Here's what I can do:\n\n• Answer questions about your uploaded notes\n• Explain any topic or concept clearly\n• Give exam tips and revision advice\n• Type /quiz to test yourself\n\nJust type your question naturally — like you'd ask ChatGPT.";
 
-    const keywords = q.replace(/what is|what are|explain|define|how does|how do|why|tell me about/g,"").trim().split(/\s+/).filter(k=>k.length>3);
-    const match = lines.find(l => keywords.some(k=>l.toLowerCase().includes(k)));
-    if (match) return match.trim();
+    // Quiz trigger
+    if (q.includes("/quiz") || (q.includes("quiz") && q.includes("start")))
+      { setMode("quiz"); return null; }
 
-    if (q.includes("exam")||q.includes("test")||q.includes("revision"))
-      return "For the exam: check the Key Concepts sidebar on the right. Those are the most important terms. Type /quiz to test yourself.";
-    if (q.includes("summary")||q.includes("overview")||q.includes("topic"))
-      return lines[0] ? lines[0].trim() : "Upload notes first and I'll summarise them.";
+    // Check concepts from notes first
+    const concept = concepts.find(c =>
+      c.term && q.includes(c.term.toLowerCase())
+    );
+    if (concept?.def)
+      return `**${concept.term}**\n\n${concept.def}\n\n*Source: your uploaded notes*`;
 
-    return "I couldn't find that in your notes. Try asking 'What is [term]?' or 'Explain [concept]'.";
+    // Search notes lines for keyword match
+    if (notesKB) {
+      const lines = notesKB.split("\n").filter(l => l.trim().length > 20);
+      const stopWords = new Set(["what","is","are","the","how","does","do","why","tell","me","about","explain","define","a","an","of","in","and","or","for"]);
+      const keywords = q.split(/\s+/).filter(k => k.length > 3 && !stopWords.has(k));
+      const matches = lines.filter(l =>
+        keywords.some(k => l.toLowerCase().includes(k))
+      ).slice(0, 3);
+
+      if (matches.length > 0)
+        return matches.join("\n\n") + "\n\n*From your notes. Ask me to explain further.*";
+    }
+
+    // Exam / revision
+    if (q.includes("exam") || q.includes("test") || q.includes("revision") || q.includes("revise"))
+      return "For exam prep:\n\n• Review the **Key Concepts** panel on the right of your summary\n• Use the flashcards — they cover all key terms\n• Type /quiz to test yourself with multiple choice questions\n• Focus on the Exam Summary section — those are the 3 most important points\n\nWant me to explain any specific topic from your notes?";
+
+    // Summary / overview
+    if (q.includes("summary") || q.includes("overview") || q.includes("what is this about"))
+      return notesKB
+        ? "Your notes cover: " + (concepts.slice(0,4).map(c=>c.term).join(", ") || "various topics") + ".\n\nCheck the Summary section for the full breakdown, or ask me about a specific concept."
+        : "Upload your notes first and I'll give you a full summary breakdown.";
+
+    // General fallback — give an informative response
+    return `I searched your notes but couldn't find a direct match for "${text}".\n\nTry rephrasing — for example:\n• "What is [specific term]?"\n• "Explain [concept]"\n\nOr ask me a general question on any topic — I'll answer from my own knowledge.`;
   };
 
   const send = async () => {
     const text = input.trim();
-    if (!text) return;
+    if (!text || loading) return;
     setInput("");
-    setMsgs(m=>[...m,{role:"user",text}]);
+    setMsgs(m => [...m, { role: "user", text }]);
     setLoading(true);
-    await new Promise(r=>setTimeout(r,350+Math.random()*250));
-    const r = getReply(text);
-    if (r !== null) setMsgs(m=>[...m,{role:"ai",text:r}]);
+    const reply = await callAI(text);
+    if (reply !== null) setMsgs(m => [...m, { role: "ai", text: reply }]);
     setLoading(false);
   };
 
+  // ── Render markdown-ish text (bold + bullets) ──────────────────────────────
+  const renderText = (text) => {
+    return text.split("\n").map((line, i) => {
+      // Bold
+      const parts = line.split(/\*\*(.*?)\*\*/g);
+      const formatted = parts.map((p, j) =>
+        j % 2 === 1
+          ? <strong key={j} style={{ fontWeight: 600, color: "var(--ink)" }}>{p}</strong>
+          : p
+      );
+      // Bullet points
+      if (line.startsWith("• ") || line.startsWith("- ")) {
+        return (
+          <div key={i} style={{ display: "flex", gap: 8, marginBottom: 4, alignItems: "flex-start" }}>
+            <span style={{ color: "var(--sage)", fontSize: 14, flexShrink: 0, marginTop: 1 }}>•</span>
+            <span>{formatted}</span>
+          </div>
+        );
+      }
+      if (line.trim() === "") return <div key={i} style={{ height: 8 }} />;
+      return <div key={i} style={{ marginBottom: 2 }}>{formatted}</div>;
+    });
+  };
+
+  // ── Suggested questions ────────────────────────────────────────────────────
+  const suggestions = hasSummary
+    ? concepts.slice(0, 3).map(c => `What is ${c.term}?`).concat(["Quiz me", "Exam tips"])
+    : ["Explain photosynthesis", "What is Newton's first law?", "Quiz me", "Exam tips"];
+
   return (
     <>
+      {/* Floating button */}
       {!open && (
-        <button onClick={()=>setOpen(true)} style={{
-          position:"fixed", bottom:24, right:24, zIndex:200,
-          width:56, height:56, borderRadius:"50%", padding:0,
-          background:"var(--paper)", border:"1.5px solid var(--border)",
-          cursor:"pointer", boxShadow:"0 4px 20px rgba(0,0,0,0.14)",
-          display:"flex", alignItems:"center", justifyContent:"center",
-          transition:"transform .2s, box-shadow .2s",
-        }}
-          onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.08)";e.currentTarget.style.boxShadow="0 6px 28px rgba(0,0,0,0.20)";}}
-          onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.boxShadow="0 4px 20px rgba(0,0,0,0.14)";}}>
-          <img src={MASCOT.idle} alt="Ducky" style={{width:40,height:40,objectFit:"contain"}} />
+        <button
+          onClick={() => setOpen(true)}
+          style={{
+            position: "fixed", bottom: 24, right: 24, zIndex: 200,
+            width: 52, height: 52, borderRadius: "50%", padding: 0, border: "none",
+            background: "var(--sage)", cursor: "pointer",
+            boxShadow: "0 4px 20px rgba(78,122,76,0.35)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "transform .2s, box-shadow .2s",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.1)"; e.currentTarget.style.boxShadow = "0 6px 28px rgba(78,122,76,0.45)"; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(78,122,76,0.35)"; }}
+          title="Chat with Ducky"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
         </button>
       )}
 
+      {/* Chat panel */}
       {open && (
         <div style={{
-          position:"fixed", bottom:24, right:24, zIndex:200,
-          width:316, height:450, display:"flex", flexDirection:"column",
-          background:"var(--paper)", border:"1.5px solid var(--border)",
-          borderRadius:18, overflow:"hidden",
-          boxShadow:"0 12px 48px rgba(0,0,0,0.18)",
-          animation:"popIn 0.2s ease both",
+          position: "fixed", bottom: 24, right: 24, zIndex: 200,
+          width: 360, height: 520, display: "flex", flexDirection: "column",
+          background: "var(--paper)", border: "1px solid var(--border)",
+          borderRadius: 16, overflow: "hidden",
+          boxShadow: "0 16px 56px rgba(0,0,0,0.16)",
+          animation: "popIn 0.2s ease both",
         }}>
-          <div style={{ padding:"11px 14px", borderBottom:"1px solid var(--border)",
-            display:"flex", alignItems:"center", gap:10, background:"var(--paper2)", flexShrink:0 }}>
-            <img src={MASCOT.idle} alt="" style={{width:26,height:26,objectFit:"contain"}} />
-            <div style={{flex:1}}>
-              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:600,color:"var(--ink)"}}>Ducky</p>
-              <p style={{fontSize:10,color:"var(--muted)"}}>Your study assistant</p>
+
+          {/* Header */}
+          <div style={{
+            padding: "12px 16px", borderBottom: "1px solid var(--border)",
+            display: "flex", alignItems: "center", gap: 10,
+            background: "var(--sage)", flexShrink: 0,
+          }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: "50%",
+              background: "rgba(255,255,255,0.22)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
             </div>
-            <button onClick={()=>{setOpen(false);if(mode==="quiz")setMode("chat");}}
-              style={{background:"none",border:"none",cursor:"pointer",fontSize:18,color:"var(--muted)",lineHeight:1}}>×</button>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 600, color: "#fff", marginBottom: 1 }}>Ducky</p>
+              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.75)" }}>
+                {hasSummary ? "Knows your notes · AI-powered" : "AI study assistant"}
+              </p>
+            </div>
+            <button
+              onClick={() => { setOpen(false); if (mode === "quiz") setMode("chat"); }}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.8)", fontSize: 20, lineHeight: 1, padding: "0 2px" }}
+            >×</button>
           </div>
 
-          <div style={{flex:1,overflowY:"auto",padding:"12px 12px 8px",
-            display:"flex",flexDirection:"column",gap:8}}>
-            {mode==="quiz" ? (
-              <QuizInline concepts={concepts} points={points} onClose={()=>setMode("chat")} />
+          {/* Body */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "14px 14px 8px",
+            display: "flex", flexDirection: "column", gap: 10 }}>
+
+            {mode === "quiz" ? (
+              <QuizInline concepts={concepts} points={points} onClose={() => setMode("chat")} />
             ) : (
               <>
-                {msgs.map((m,i)=>(
-                  <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",alignItems:"flex-end",gap:6}}>
-                    {m.role==="ai" && <img src={MASCOT.idle} alt="" style={{width:20,height:20,objectFit:"contain",flexShrink:0,marginBottom:2}} />}
-                    <div className={m.role==="ai"?"chat-bubble-ai":"chat-bubble-user"} style={{whiteSpace:"pre-line"}}>{m.text}</div>
+                {msgs.map((m, i) => (
+                  <div key={i} style={{
+                    display: "flex",
+                    justifyContent: m.role === "user" ? "flex-end" : "flex-start",
+                    alignItems: "flex-start", gap: 8,
+                  }}>
+                    {/* AI avatar */}
+                    {m.role === "ai" && (
+                      <div style={{
+                        width: 28, height: 28, borderRadius: "50%",
+                        background: "var(--sage)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        flexShrink: 0, marginTop: 2,
+                      }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                      </div>
+                    )}
+                    <div
+                      className={m.role === "ai" ? "chat-bubble-ai" : "chat-bubble-user"}
+                      style={{ fontSize: 13, lineHeight: 1.65 }}
+                    >
+                      {m.role === "ai" ? renderText(m.text) : m.text}
+                    </div>
                   </div>
                 ))}
+
+                {/* Typing indicator */}
                 {loading && (
-                  <div style={{display:"flex",alignItems:"flex-end",gap:6}}>
-                    <img src={MASCOT.idle} alt="" style={{width:20,height:20,objectFit:"contain"}} />
-                    <div className="chat-bubble-ai">
-                      <span style={{display:"flex",gap:4,alignItems:"center"}}>
-                        {[0,1,2].map(i=>(<span key={i} style={{width:5,height:5,borderRadius:"50%",background:"var(--muted)",display:"inline-block",animation:"pulse 1.2s ease infinite",animationDelay:`${i*0.2}s`}} />))}
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: "50%", background: "var(--sage)",
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                    }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                      </svg>
+                    </div>
+                    <div className="chat-bubble-ai" style={{ padding: "12px 16px" }}>
+                      <span style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                        {[0, 1, 2].map(i => (
+                          <span key={i} style={{
+                            width: 6, height: 6, borderRadius: "50%",
+                            background: "var(--muted)", display: "inline-block",
+                            animation: "pulse 1.4s ease infinite",
+                            animationDelay: `${i * 0.22}s`,
+                          }} />
+                        ))}
                       </span>
                     </div>
                   </div>
                 )}
+
+                {/* Suggested questions — shown after greeting */}
+                {msgs.length === 1 && !loading && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
+                    {suggestions.map((s, i) => (
+                      <button key={i} onClick={() => {
+                        setInput(s);
+                        setTimeout(() => inputRef.current?.focus(), 50);
+                      }} style={{
+                        padding: "5px 12px", borderRadius: 99,
+                        border: "1.5px solid var(--border)",
+                        background: "var(--paper2)", color: "var(--ink2)",
+                        fontFamily: "'DM Sans',sans-serif", fontSize: 12, cursor: "pointer",
+                        transition: "border-color .15s",
+                      }}
+                        onMouseEnter={e => e.currentTarget.style.borderColor = "var(--sage)"}
+                        onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}
+                      >{s}</button>
+                    ))}
+                  </div>
+                )}
+
                 <div ref={bottomRef} />
               </>
             )}
           </div>
 
-          {mode==="chat" && (
-            <div style={{padding:"10px 12px",borderTop:"1px solid var(--border)",display:"flex",gap:8,alignItems:"center",flexShrink:0}}>
-              <input className="chat-input" placeholder="Ask anything, or /quiz…"
-                value={input} onChange={e=>setInput(e.target.value)}
-                onKeyDown={e=>e.key==="Enter"&&send()} style={{flex:1}} />
-              <button onClick={send} disabled={!input.trim()} style={{
-                background:"var(--sage)",border:"none",borderRadius:"50%",
-                width:30,height:30,cursor:input.trim()?"pointer":"not-allowed",
-                display:"flex",alignItems:"center",justifyContent:"center",
-                flexShrink:0,opacity:input.trim()?1:0.45,transition:"opacity .2s",
+          {/* Input */}
+          {mode === "chat" && (
+            <div style={{
+              padding: "10px 12px", borderTop: "1px solid var(--border)",
+              display: "flex", gap: 8, alignItems: "flex-end", flexShrink: 0,
+              background: "var(--paper)",
+            }}>
+              <textarea
+                ref={inputRef}
+                className="chat-input"
+                placeholder="Ask anything about your notes or any topic…"
+                value={input}
+                rows={1}
+                onChange={e => {
+                  setInput(e.target.value);
+                  e.target.style.height = "auto";
+                  e.target.style.height = Math.min(e.target.scrollHeight, 80) + "px";
+                }}
+                onKeyDown={e => {
+                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+                }}
+                style={{
+                  flex: 1, resize: "none", overflow: "hidden",
+                  minHeight: 38, maxHeight: 80,
+                  padding: "9px 14px", lineHeight: 1.5,
+                  borderRadius: 12,
+                }}
+              />
+              <button onClick={send} disabled={!input.trim() || loading} style={{
+                background: "var(--sage)", border: "none", borderRadius: 10,
+                width: 36, height: 36, cursor: input.trim() && !loading ? "pointer" : "not-allowed",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0, opacity: input.trim() && !loading ? 1 : 0.4, transition: "opacity .2s",
               }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
                   <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
                 </svg>
               </button>
