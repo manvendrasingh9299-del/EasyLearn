@@ -576,367 +576,357 @@ function QuizInline({ concepts, points, onClose }) {
 
 function ChatBot({ summaryContext, concepts, points }) {
   const [open, setOpen]       = useState(false);
-  const [mode, setMode]       = useState("chat");
+  const [mode, setMode]       = useState("chat"); // "chat" | "quiz" | "questions"
   const [msgs, setMsgs]       = useState([]);
   const [input, setInput]     = useState("");
   const [loading, setLoading] = useState(false);
-  const [hasSummary]          = useState(() => !!(summaryContext && summaryContext.trim().length > 50));
+  const [genQuestions, setGenQuestions] = useState([]);
+  const [genLoading, setGenLoading]     = useState(false);
   const bottomRef = useRef();
   const inputRef  = useRef();
 
-  // Build a clean knowledge base from the uploaded notes
-  const notesKB = (() => {
-    if (!summaryContext) return "";
-    return summaryContext
-      .replace(/[📚✅🔑🧠📝🎯]/g, "")
-      .replace(/\*\*/g, "")
-      .replace(/#{1,6} /g, "")
-      .trim();
-  })();
+  const hasSummary = !!(summaryContext && summaryContext.trim().length > 50);
 
-  // Greeting shown when panel first opens
+  const notesKB = hasSummary
+    ? summaryContext.replace(/[📚✅🔑🧠📝🎯]/g,"").replace(/\*\*/g,"").replace(/#{1,6} /g,"").trim()
+    : "";
+
   const greeting = hasSummary
-    ? "Hi, I'm Ducky — your AI study assistant.\n\nI've read your uploaded notes and I'm ready to help. Ask me anything — whether it's about your notes or a general question. I'll do my best to give you a clear, useful answer."
-    : "Hi, I'm Ducky — your AI study assistant.\n\nI can answer general questions on any topic, help you understand concepts, or give exam tips. Upload your notes and I'll also answer questions directly from them.";
+    ? "Hi, I'm Ducky 🐣\n\nI've read your uploaded notes and I'm ready to help. Ask me anything — about your notes or any topic at all. I'll answer like ChatGPT would."
+    : "Hi, I'm Ducky 🐣\n\nI can answer any question you have — about any topic. Upload your notes and I'll also answer questions directly from them.";
 
+  // Open → show greeting once
   useEffect(() => {
-    if (open && msgs.length === 0) {
-      setMsgs([{ role: "ai", text: greeting }]);
-    }
+    if (open && msgs.length === 0)
+      setMsgs([{ role:"ai", text:greeting }]);
   }, [open]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [msgs, open, loading]);
+    bottomRef.current?.scrollIntoView({ behavior:"smooth" });
+  }, [msgs, loading, mode]);
 
   useEffect(() => {
-    if (open && mode === "chat") {
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
+    if (open && mode === "chat")
+      setTimeout(() => inputRef.current?.focus(), 120);
   }, [open, mode]);
 
-  // ── Call backend Ollama via the chat endpoint ──────────────────────────────
-  const callAI = async (userMessage) => {
+  // ── Call /api/v1/chat (Mistral backend) ────────────────────────────────
+  const callDucky = async (userMsg) => {
     const token = localStorage.getItem("el_token");
-
-    // Build a context-aware prompt
-    const systemContext = notesKB
-      ? `You are Ducky, a friendly and knowledgeable AI study assistant embedded in EasyLearn.
-The student has uploaded notes. Use them as your primary source when relevant.
-If the question is not covered in the notes, answer from your own knowledge — you are a capable AI like ChatGPT.
-Always give clear, direct, helpful answers in plain English.
-Keep answers concise but complete. Use bullet points when listing multiple items.
-Never say "I don't know" — always provide the best answer you can.
-
---- Student's uploaded notes ---
-${notesKB.substring(0, 3000)}
---- End of notes ---`
-      : `You are Ducky, a friendly and knowledgeable AI study assistant embedded in EasyLearn.
-Answer any question the student asks — you are a capable AI like ChatGPT.
-Give clear, direct, helpful answers in plain English.
-Keep answers concise but complete. Use bullet points when listing multiple items.
-Never say "I don't know" — always provide the best answer you can.`;
-
-    const fullPrompt = `${systemContext}
-
-Student: ${userMessage}
-Ducky:`;
+    const contextBlock = notesKB
+      ? `You have access to the student's uploaded study notes below. Use them as your primary source when the question relates to them. For anything not in the notes, answer from your own general knowledge — like ChatGPT would.\n\n--- Notes ---\n${notesKB.substring(0,3000)}\n--- End of notes ---`
+      : `Answer from your general knowledge. Be helpful and thorough like ChatGPT.`;
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ message: userMessage, context: fullPrompt }),
+      const res = await fetch(`${API}/chat`, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", ...(token?{"Authorization":`Bearer ${token}`}:{}) },
+        body:JSON.stringify({ message:userMsg, context:contextBlock }),
       });
-
       if (res.ok) {
-        const data = await res.json();
-        return data.reply || data.message || data.response || "I couldn't get a response. Please try again.";
+        const d = await res.json();
+        return d.reply || d.message || d.response || localReply(userMsg);
       }
-      throw new Error("endpoint_unavailable");
-    } catch {
-      // No backend chat endpoint yet — fallback to smart local reply
-      return localReply(userMessage);
-    }
+    } catch {}
+    return localReply(userMsg);
   };
 
-  // ── Smart local fallback (when no /chat endpoint exists yet) ──────────────
+  // ── Generate important questions from notes ────────────────────────────
+  const generateQuestions = async () => {
+    if (!hasSummary) {
+      setGenQuestions(["Upload your notes first — then I can generate questions from them."]);
+      return;
+    }
+    setGenLoading(true);
+    const token = localStorage.getItem("el_token");
+    const prompt = `You are a study assistant. Based on the notes below, generate 8 important exam-style questions a student should be able to answer. Mix short-answer and conceptual questions. Number them 1-8. Just list the questions, no answers.\n\nNotes:\n${notesKB.substring(0,3000)}`;
+    try {
+      const res = await fetch(`${API}/chat`, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", ...(token?{"Authorization":`Bearer ${token}`}:{}) },
+        body:JSON.stringify({ message:prompt, context:"" }),
+      });
+      if (res.ok) {
+        const d = await res.json();
+        const raw = d.reply || "";
+        const qs = raw.split("\n").filter(l => l.trim() && /^\d/.test(l.trim())).map(l => l.replace(/^\d+[\.\)]\s*/,"").trim());
+        setGenQuestions(qs.length ? qs : [raw]);
+      }
+    } catch {
+      setGenQuestions(["Could not generate questions — make sure your backend is running."]);
+    }
+    setGenLoading(false);
+  };
+
+  // ── Smart local fallback ───────────────────────────────────────────────
   const localReply = (text) => {
     const q = text.toLowerCase().trim();
     if (q === "/quiz") { setMode("quiz"); return null; }
-
-    // Greetings
-    if (["hi","hello","hey","morning","hiya"].includes(q))
-      return "Hey there! What would you like to know? I can explain concepts from your notes, answer general questions, or start a quiz — just ask.";
-
-    // Help menu
-    if (q === "help" || q.includes("what can you") || q.includes("what do you"))
-      return "Here's what I can do:\n\n• Answer questions about your uploaded notes\n• Explain any topic or concept clearly\n• Give exam tips and revision advice\n• Type /quiz to test yourself\n\nJust type your question naturally — like you'd ask ChatGPT.";
-
-    // Quiz trigger
-    if (q.includes("/quiz") || (q.includes("quiz") && q.includes("start")))
-      { setMode("quiz"); return null; }
-
-    // Check concepts from notes first
-    const concept = concepts.find(c =>
-      c.term && q.includes(c.term.toLowerCase())
-    );
-    if (concept?.def)
-      return `**${concept.term}**\n\n${concept.def}\n\n*Source: your uploaded notes*`;
-
-    // Search notes lines for keyword match
+    if (["hi","hello","hey"].includes(q))
+      return "Hey! Ask me anything — I'll answer from your notes if relevant, or from my own knowledge otherwise.";
+    if (q.includes("what can you") || q === "help")
+      return "I can:\n\n• Answer questions about your uploaded notes\n• Answer any general question (like ChatGPT)\n• Generate important exam questions from your notes\n• Quiz you with multiple choice questions\n\nJust type your question naturally.";
+    const concept = concepts.find(c => c.term && q.includes(c.term.toLowerCase()));
+    if (concept?.def) return `**${concept.term}**\n\n${concept.def}`;
     if (notesKB) {
       const lines = notesKB.split("\n").filter(l => l.trim().length > 20);
-      const stopWords = new Set(["what","is","are","the","how","does","do","why","tell","me","about","explain","define","a","an","of","in","and","or","for"]);
-      const keywords = q.split(/\s+/).filter(k => k.length > 3 && !stopWords.has(k));
-      const matches = lines.filter(l =>
-        keywords.some(k => l.toLowerCase().includes(k))
-      ).slice(0, 3);
-
-      if (matches.length > 0)
-        return matches.join("\n\n") + "\n\n*From your notes. Ask me to explain further.*";
+      const stop = new Set(["what","is","are","the","how","does","do","why","tell","me","about","explain","define","a","an","of","in","and","for"]);
+      const kw = q.split(/\s+/).filter(k => k.length > 3 && !stop.has(k));
+      const hits = lines.filter(l => kw.some(k => l.toLowerCase().includes(k))).slice(0,2);
+      if (hits.length) return hits.join("\n\n") + "\n\n*From your notes. Ask me to explain more.*";
     }
-
-    // Exam / revision
-    if (q.includes("exam") || q.includes("test") || q.includes("revision") || q.includes("revise"))
-      return "For exam prep:\n\n• Review the **Key Concepts** panel on the right of your summary\n• Use the flashcards — they cover all key terms\n• Type /quiz to test yourself with multiple choice questions\n• Focus on the Exam Summary section — those are the 3 most important points\n\nWant me to explain any specific topic from your notes?";
-
-    // Summary / overview
-    if (q.includes("summary") || q.includes("overview") || q.includes("what is this about"))
-      return notesKB
-        ? "Your notes cover: " + (concepts.slice(0,4).map(c=>c.term).join(", ") || "various topics") + ".\n\nCheck the Summary section for the full breakdown, or ask me about a specific concept."
-        : "Upload your notes first and I'll give you a full summary breakdown.";
-
-    // General fallback — give an informative response
-    return `I searched your notes but couldn't find a direct match for "${text}".\n\nTry rephrasing — for example:\n• "What is [specific term]?"\n• "Explain [concept]"\n\nOr ask me a general question on any topic — I'll answer from my own knowledge.`;
+    return `I searched your notes but didn't find "${text}".\n\nNote: my backend connection may be limited in this mode. Try asking a different way, or check that Ollama is running.`;
   };
 
   const send = async () => {
     const text = input.trim();
     if (!text || loading) return;
     setInput("");
-    setMsgs(m => [...m, { role: "user", text }]);
+    if (inputRef.current) { inputRef.current.style.height = "auto"; }
+    setMsgs(m => [...m, { role:"user", text }]);
     setLoading(true);
-    const reply = await callAI(text);
-    if (reply !== null) setMsgs(m => [...m, { role: "ai", text: reply }]);
+    const r = await callDucky(text);
+    if (r !== null) setMsgs(m => [...m, { role:"ai", text:r }]);
     setLoading(false);
   };
 
-  // ── Render markdown-ish text (bold + bullets) ──────────────────────────────
-  const renderText = (text) => {
-    return text.split("\n").map((line, i) => {
-      // Bold
-      const parts = line.split(/\*\*(.*?)\*\*/g);
-      const formatted = parts.map((p, j) =>
-        j % 2 === 1
-          ? <strong key={j} style={{ fontWeight: 600, color: "var(--ink)" }}>{p}</strong>
-          : p
-      );
-      // Bullet points
-      if (line.startsWith("• ") || line.startsWith("- ")) {
-        return (
-          <div key={i} style={{ display: "flex", gap: 8, marginBottom: 4, alignItems: "flex-start" }}>
-            <span style={{ color: "var(--sage)", fontSize: 14, flexShrink: 0, marginTop: 1 }}>•</span>
-            <span>{formatted}</span>
-          </div>
-        );
-      }
-      if (line.trim() === "") return <div key={i} style={{ height: 8 }} />;
-      return <div key={i} style={{ marginBottom: 2 }}>{formatted}</div>;
-    });
-  };
+  // ── Render markdown-ish text ───────────────────────────────────────────
+  const renderText = (text) => text.split("\n").map((line,i) => {
+    if (line.trim() === "") return <div key={i} style={{height:6}}/>;
+    const parts = line.split(/\*\*(.*?)\*\*/g).map((p,j) =>
+      j%2===1 ? <strong key={j} style={{fontWeight:600}}>{p}</strong> : p
+    );
+    const isBullet = /^[•\-]\s/.test(line.trim());
+    if (isBullet) return (
+      <div key={i} style={{display:"flex",gap:8,marginBottom:3,alignItems:"flex-start"}}>
+        <span style={{color:"var(--sage)",flexShrink:0,marginTop:1}}>•</span>
+        <span style={{lineHeight:1.6}}>{parts}</span>
+      </div>
+    );
+    return <div key={i} style={{marginBottom:3,lineHeight:1.65}}>{parts}</div>;
+  });
 
-  // ── Suggested questions ────────────────────────────────────────────────────
-  const suggestions = hasSummary
-    ? concepts.slice(0, 3).map(c => `What is ${c.term}?`).concat(["Quiz me", "Exam tips"])
-    : ["Explain photosynthesis", "What is Newton's first law?", "Quiz me", "Exam tips"];
+  // ── Suggestion chips ───────────────────────────────────────────────────
+  const chips = hasSummary
+    ? [...concepts.slice(0,2).map(c=>`What is ${c.term}?`), "Quiz me","Generate exam questions","Exam tips"]
+    : ["Explain photosynthesis","What is machine learning?","Quiz me","Generate exam questions"];
+
+  // ── Panel modes ────────────────────────────────────────────────────────
+  const TabBtn = ({ id, label }) => (
+    <button onClick={() => { setMode(id); if(id==="questions"&&!genQuestions.length) generateQuestions(); }}
+      style={{
+        flex:1, padding:"8px 4px", border:"none", cursor:"pointer",
+        background: mode===id ? "var(--paper)" : "transparent",
+        color: mode===id ? "var(--sage)" : "var(--muted)",
+        fontFamily:"'DM Sans',sans-serif", fontSize:12, fontWeight:600,
+        borderRadius:8, transition:"all .2s",
+        borderBottom: mode===id ? "2px solid var(--sage)" : "2px solid transparent",
+      }}>{label}</button>
+  );
 
   return (
     <>
-      {/* Floating button */}
+      {/* ── Floating button — idle mascot ── */}
       {!open && (
-        <button
-          onClick={() => setOpen(true)}
-          style={{
-            position: "fixed", bottom: 24, right: 24, zIndex: 200,
-            width: 52, height: 52, borderRadius: "50%", padding: 0, border: "none",
-            background: "var(--sage)", cursor: "pointer",
-            boxShadow: "0 4px 20px rgba(78,122,76,0.35)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "transform .2s, box-shadow .2s",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.1)"; e.currentTarget.style.boxShadow = "0 6px 28px rgba(78,122,76,0.45)"; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(78,122,76,0.35)"; }}
+        <button onClick={() => setOpen(true)}
           title="Chat with Ducky"
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
+          style={{
+            position:"fixed", bottom:24, right:24, zIndex:200,
+            width:60, height:60, borderRadius:"50%", padding:4,
+            background:"var(--paper)", border:"2px solid var(--border)",
+            cursor:"pointer", boxShadow:"0 4px 24px rgba(0,0,0,0.14)",
+            display:"flex", alignItems:"center", justifyContent:"center",
+            transition:"transform .2s, box-shadow .2s",
+          }}
+          onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.1)";e.currentTarget.style.boxShadow="0 6px 32px rgba(0,0,0,0.22)";}}
+          onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.boxShadow="0 4px 24px rgba(0,0,0,0.14)";}}>
+          <img src={MASCOT.idle} alt="Ducky" style={{width:46,height:46,objectFit:"contain"}}/>
         </button>
       )}
 
-      {/* Chat panel */}
+      {/* ── Full/half-screen chat panel ── */}
       {open && (
         <div style={{
-          position: "fixed", bottom: 24, right: 24, zIndex: 200,
-          width: 360, height: 520, display: "flex", flexDirection: "column",
-          background: "var(--paper)", border: "1px solid var(--border)",
-          borderRadius: 16, overflow: "hidden",
-          boxShadow: "0 16px 56px rgba(0,0,0,0.16)",
-          animation: "popIn 0.2s ease both",
+          position:"fixed", bottom:0, right:0, zIndex:200,
+          width:"min(460px, 100vw)",
+          height:"min(680px, 92vh)",
+          display:"flex", flexDirection:"column",
+          background:"var(--paper)",
+          border:"1.5px solid var(--border)",
+          borderRadius:"16px 16px 0 0",
+          boxShadow:"0 -4px 60px rgba(0,0,0,0.18)",
+          animation:"popIn 0.25s cubic-bezier(.22,1,.36,1) both",
+          overflow:"hidden",
         }}>
 
           {/* Header */}
           <div style={{
-            padding: "12px 16px", borderBottom: "1px solid var(--border)",
-            display: "flex", alignItems: "center", gap: 10,
-            background: "var(--sage)", flexShrink: 0,
+            padding:"12px 16px",
+            background:"var(--ink)", flexShrink:0,
+            display:"flex", alignItems:"center", gap:12,
           }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: "50%",
-              background: "rgba(255,255,255,0.22)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-              </svg>
-            </div>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 600, color: "#fff", marginBottom: 1 }}>Ducky</p>
-              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.75)" }}>
-                {hasSummary ? "Knows your notes · AI-powered" : "AI study assistant"}
+            <img src={MASCOT.idle} alt="Ducky" style={{width:34,height:34,objectFit:"contain",flexShrink:0}}/>
+            <div style={{flex:1}}>
+              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:14,fontWeight:600,color:"var(--cream)",marginBottom:1}}>Ducky</p>
+              <p style={{fontSize:11,color:"rgba(255,255,255,0.5)"}}>
+                {hasSummary ? "Knows your notes · Powered by Mistral" : "AI study assistant · Powered by Mistral"}
               </p>
             </div>
-            <button
-              onClick={() => { setOpen(false); if (mode === "quiz") setMode("chat"); }}
-              style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.8)", fontSize: 20, lineHeight: 1, padding: "0 2px" }}
-            >×</button>
+            <button onClick={() => { setOpen(false); setMode("chat"); }}
+              style={{background:"rgba(255,255,255,0.1)",border:"none",cursor:"pointer",
+                borderRadius:8,padding:"6px 10px",color:"rgba(255,255,255,0.7)",fontSize:13,
+                fontFamily:"'DM Sans',sans-serif",transition:"background .2s"}}
+              onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.2)"}
+              onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.1)"}>
+              Close ↓
+            </button>
+          </div>
+
+          {/* Tab bar */}
+          <div style={{
+            display:"flex", gap:4, padding:"8px 12px 0",
+            borderBottom:"1px solid var(--border)",
+            background:"var(--paper2)", flexShrink:0,
+          }}>
+            <TabBtn id="chat"      label="💬 Chat"      />
+            <TabBtn id="quiz"      label="🎯 Quiz"      />
+            <TabBtn id="questions" label="📋 Questions"  />
           </div>
 
           {/* Body */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "14px 14px 8px",
-            display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{flex:1,overflowY:"auto",padding:"14px",display:"flex",flexDirection:"column",gap:10}}>
 
-            {mode === "quiz" ? (
+            {/* ── Chat tab ── */}
+            {mode === "chat" && (<>
+              {msgs.map((m,i) => (
+                <div key={i} style={{
+                  display:"flex",
+                  justifyContent:m.role==="user"?"flex-end":"flex-start",
+                  alignItems:"flex-start", gap:8,
+                }}>
+                  {m.role === "ai" && (
+                    <img src={MASCOT.idle} alt="" style={{width:28,height:28,objectFit:"contain",flexShrink:0,marginTop:2}}/>
+                  )}
+                  <div className={m.role==="ai"?"chat-bubble-ai":"chat-bubble-user"}>
+                    {m.role==="ai" ? renderText(m.text) : m.text}
+                  </div>
+                </div>
+              ))}
+
+              {/* Typing indicator */}
+              {loading && (
+                <div style={{display:"flex",alignItems:"flex-start",gap:8}}>
+                  <img src={MASCOT.processing} alt="" style={{width:28,height:28,objectFit:"contain",flexShrink:0}}/>
+                  <div className="chat-bubble-ai" style={{padding:"12px 16px"}}>
+                    <span style={{display:"flex",gap:5,alignItems:"center"}}>
+                      {[0,1,2].map(i=>(
+                        <span key={i} style={{width:7,height:7,borderRadius:"50%",background:"var(--muted)",
+                          display:"inline-block",animation:"pulse 1.4s ease infinite",animationDelay:`${i*0.22}s`}}/>
+                      ))}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Suggestion chips after greeting */}
+              {msgs.length === 1 && !loading && (
+                <div style={{display:"flex",flexWrap:"wrap",gap:6,marginTop:4}}>
+                  {chips.map((s,i) => (
+                    <button key={i} onClick={() => {
+                      if (s === "Generate exam questions") { setMode("questions"); generateQuestions(); return; }
+                      if (s === "Quiz me") { setMode("quiz"); return; }
+                      setInput(s);
+                      setTimeout(() => inputRef.current?.focus(), 50);
+                    }} style={{
+                      padding:"5px 12px",borderRadius:99,
+                      border:"1.5px solid var(--border)",
+                      background:"var(--paper2)",color:"var(--ink2)",
+                      fontFamily:"'DM Sans',sans-serif",fontSize:12,cursor:"pointer",
+                    }}>{s}</button>
+                  ))}
+                </div>
+              )}
+              <div ref={bottomRef}/>
+            </>)}
+
+            {/* ── Quiz tab ── */}
+            {mode === "quiz" && (
               <QuizInline concepts={concepts} points={points} onClose={() => setMode("chat")} />
-            ) : (
-              <>
-                {msgs.map((m, i) => (
-                  <div key={i} style={{
-                    display: "flex",
-                    justifyContent: m.role === "user" ? "flex-end" : "flex-start",
-                    alignItems: "flex-start", gap: 8,
-                  }}>
-                    {/* AI avatar */}
-                    {m.role === "ai" && (
-                      <div style={{
-                        width: 28, height: 28, borderRadius: "50%",
-                        background: "var(--sage)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        flexShrink: 0, marginTop: 2,
+            )}
+
+            {/* ── Important Questions tab ── */}
+            {mode === "questions" && (
+              <div>
+                <p style={{fontSize:13,color:"var(--muted)",marginBottom:16,lineHeight:1.6}}>
+                  {hasSummary
+                    ? "Important questions generated from your uploaded notes:"
+                    : "Upload your notes first — then I'll generate exam questions from them."}
+                </p>
+                {genLoading ? (
+                  <div style={{display:"flex",alignItems:"center",gap:10,padding:"20px 0"}}>
+                    <img src={MASCOT.processing} alt="" style={{width:36,height:36,objectFit:"contain"}}/>
+                    <p style={{fontSize:13,color:"var(--muted)"}}>Generating questions…</p>
+                  </div>
+                ) : genQuestions.length > 0 ? (
+                  <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                    {genQuestions.map((q,i) => (
+                      <div key={i} style={{
+                        background:"var(--paper2)",border:"1px solid var(--border)",
+                        borderRadius:10,padding:"12px 16px",
+                        display:"flex",gap:12,alignItems:"flex-start",
                       }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
-                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                        </svg>
+                        <span style={{
+                          minWidth:24,height:24,borderRadius:6,
+                          background:"var(--sage)",color:"#fff",
+                          display:"flex",alignItems:"center",justifyContent:"center",
+                          fontSize:11,fontWeight:700,flexShrink:0,marginTop:1,
+                        }}>{i+1}</span>
+                        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13.5,lineHeight:1.65,color:"var(--ink)",margin:0}}>{q}</p>
                       </div>
-                    )}
-                    <div
-                      className={m.role === "ai" ? "chat-bubble-ai" : "chat-bubble-user"}
-                      style={{ fontSize: 13, lineHeight: 1.65 }}
-                    >
-                      {m.role === "ai" ? renderText(m.text) : m.text}
-                    </div>
-                  </div>
-                ))}
-
-                {/* Typing indicator */}
-                {loading && (
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                    <div style={{
-                      width: 28, height: 28, borderRadius: "50%", background: "var(--sage)",
-                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                    }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                      </svg>
-                    </div>
-                    <div className="chat-bubble-ai" style={{ padding: "12px 16px" }}>
-                      <span style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                        {[0, 1, 2].map(i => (
-                          <span key={i} style={{
-                            width: 6, height: 6, borderRadius: "50%",
-                            background: "var(--muted)", display: "inline-block",
-                            animation: "pulse 1.4s ease infinite",
-                            animationDelay: `${i * 0.22}s`,
-                          }} />
-                        ))}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Suggested questions — shown after greeting */}
-                {msgs.length === 1 && !loading && (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
-                    {suggestions.map((s, i) => (
-                      <button key={i} onClick={() => {
-                        setInput(s);
-                        setTimeout(() => inputRef.current?.focus(), 50);
-                      }} style={{
-                        padding: "5px 12px", borderRadius: 99,
-                        border: "1.5px solid var(--border)",
-                        background: "var(--paper2)", color: "var(--ink2)",
-                        fontFamily: "'DM Sans',sans-serif", fontSize: 12, cursor: "pointer",
-                        transition: "border-color .15s",
-                      }}
-                        onMouseEnter={e => e.currentTarget.style.borderColor = "var(--sage)"}
-                        onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}
-                      >{s}</button>
                     ))}
+                    <button onClick={generateQuestions} style={{
+                      marginTop:8,padding:"9px",borderRadius:8,border:"1.5px solid var(--border)",
+                      background:"transparent",color:"var(--muted)",fontFamily:"'DM Sans',sans-serif",
+                      fontSize:12,cursor:"pointer",width:"100%",
+                    }}>↻ Regenerate questions</button>
                   </div>
-                )}
-
-                <div ref={bottomRef} />
-              </>
+                ) : hasSummary ? (
+                  <button onClick={generateQuestions} style={{
+                    padding:"12px 20px",borderRadius:10,border:"none",
+                    background:"var(--sage)",color:"#fff",fontFamily:"'DM Sans',sans-serif",
+                    fontSize:13,fontWeight:600,cursor:"pointer",width:"100%",
+                  }}>Generate questions from my notes</button>
+                ) : null}
+              </div>
             )}
           </div>
 
-          {/* Input */}
+          {/* Input — only in chat mode */}
           {mode === "chat" && (
             <div style={{
-              padding: "10px 12px", borderTop: "1px solid var(--border)",
-              display: "flex", gap: 8, alignItems: "flex-end", flexShrink: 0,
-              background: "var(--paper)",
+              padding:"10px 14px",borderTop:"1px solid var(--border)",
+              display:"flex",gap:8,alignItems:"flex-end",flexShrink:0,
+              background:"var(--paper)",
             }}>
               <textarea
                 ref={inputRef}
                 className="chat-input"
-                placeholder="Ask anything about your notes or any topic…"
+                placeholder="Ask anything…"
                 value={input}
                 rows={1}
                 onChange={e => {
                   setInput(e.target.value);
                   e.target.style.height = "auto";
-                  e.target.style.height = Math.min(e.target.scrollHeight, 80) + "px";
+                  e.target.style.height = Math.min(e.target.scrollHeight, 100) + "px";
                 }}
-                onKeyDown={e => {
-                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
-                }}
-                style={{
-                  flex: 1, resize: "none", overflow: "hidden",
-                  minHeight: 38, maxHeight: 80,
-                  padding: "9px 14px", lineHeight: 1.5,
-                  borderRadius: 12,
-                }}
+                onKeyDown={e => { if (e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();} }}
+                style={{flex:1,resize:"none",overflow:"hidden",minHeight:38,maxHeight:100,borderRadius:12,padding:"9px 14px"}}
               />
-              <button onClick={send} disabled={!input.trim() || loading} style={{
-                background: "var(--sage)", border: "none", borderRadius: 10,
-                width: 36, height: 36, cursor: input.trim() && !loading ? "pointer" : "not-allowed",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0, opacity: input.trim() && !loading ? 1 : 0.4, transition: "opacity .2s",
+              <button onClick={send} disabled={!input.trim()||loading} style={{
+                background:"var(--sage)",border:"none",borderRadius:10,
+                width:38,height:38,cursor:input.trim()&&!loading?"pointer":"not-allowed",
+                display:"flex",alignItems:"center",justifyContent:"center",
+                flexShrink:0,opacity:input.trim()&&!loading?1:0.4,transition:"opacity .2s",
               }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
                   <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
@@ -949,6 +939,7 @@ Ducky:`;
     </>
   );
 }
+
 
 function cleanRaw(text) {
   return text.split("").filter(c=>c.charCodeAt(0)<9000||c===" ").join("").replace(/\*\*/g,"").replace(/#{1,6} /g,"").trim();
