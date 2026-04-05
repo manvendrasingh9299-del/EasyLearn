@@ -10,7 +10,15 @@ const MASCOT = {
   processing: "/mascot/processing.gif",
 };
 function Mascot({ pose = "idle", size = 120, style = {} }) {
-  return <img src={MASCOT[pose]} alt={pose} style={{ width:size, height:size, objectFit:"contain", ...style }} />;
+  const src = MASCOT[pose] || MASCOT.idle;
+  return (
+    <img
+      src={src}
+      alt={pose}
+      onError={e => { if (e.target.src !== MASCOT.idle) e.target.src = MASCOT.idle; }}
+      style={{ width:size, height:size, objectFit:"contain", imageRendering:"auto", ...style }}
+    />
+  );
 }
 
 function useDarkMode() {
@@ -471,30 +479,253 @@ function CopyBtn({ text }) {
 
 function exportPDF(topic, raw) {
   const win = window.open("", "_blank");
-  const clean = raw.replace(/[📚✅🔑🧠📝🎯\*#]/g,"").replace(/\n/g,"</p><p>");
-  win.document.write(`<!DOCTYPE html><html><head>
-    <title>${topic} — EasyLearn Notes</title>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&family=Patrick+Hand&display=swap" rel="stylesheet"/>
-    <style>
-      @page{margin:50px 65px;}
-      body{font-family:'Caveat',cursive;background:#FDFAF3;color:#1a3a6e;line-height:2.15;font-size:19px;margin:0;padding:24px 40px 48px;
-        background-image:repeating-linear-gradient(transparent,transparent 34px,#b8cce4 34px,#b8cce4 35px);}
-      .top{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #1a3a6e;padding-bottom:10px;margin-bottom:4px;}
-      h1{font-family:'Caveat',cursive;font-size:34px;font-weight:600;color:#1a1a2e;margin:0;}
-      .date{font-family:'Patrick Hand',cursive;font-size:13px;color:#9ab5ce;}
-      .label{font-family:'Patrick Hand',cursive;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#7a9abf;margin:26px 0 6px;font-style:italic;}
-      p{font-size:18px;margin-bottom:2px;color:#1a3a6e;}
-      .brand{font-family:'Caveat',cursive;font-size:13px;color:#9ab5ce;margin-top:48px;text-align:right;font-style:italic;}
-      .ml{position:fixed;top:0;bottom:0;left:88px;width:2px;background:#f9b3b3;pointer-events:none;}
-    </style>
-  </head><body>
-    <div class="ml"></div>
-    <div class="top"><h1>${topic}</h1><span class="date">${new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}</span></div>
-    <div class="label">EasyLearn Study Notes</div>
-    <p>${clean}</p>
-    <p class="brand">easylearn.local</p>
-    <script>window.onload=()=>window.print();</script>
-  </body></html>`);
+  if (!win) return;
+
+  // Parse sections from raw
+  const getSection = (emoji) => {
+    const m = raw.match(new RegExp(emoji + "[^\\n]*\\n([\\s\\S]*?)(?=\\n[📚✅🔑🧠📝🎯]|$)", "i"));
+    return m ? m[1].replace(/[📚✅🔑🧠📝🎯★✦✓•]/g,"").replace(/\*\*/g,"").trim() : "";
+  };
+  const explanation = getSection("🧠");
+  const examSummary = getSection("📝");
+  const tips        = getSection("🎯");
+  const pointsRaw   = getSection("✅").split("\n").filter(l=>l.trim()).map(l=>l.replace(/^[-*•\d.]+\s*/,"").trim()).filter(Boolean);
+  const conceptsRaw = getSection("🔑").split("\n").filter(l=>l.trim()).map(l=>{
+    const c = l.replace(/^[-*•\d.]+\s*/,"");
+    const p = c.split(/[:\-–]/);
+    return p.length > 1 ? `<tr><td class="term">${p[0].trim()}</td><td>${p.slice(1).join(":").trim()}</td></tr>` : "";
+  }).filter(Boolean).join("");
+
+  const pointsHTML = pointsRaw.map((p,i)=>`
+    <div class="point"><span class="num">${String(i+1).padStart(2,"0")}</span><span>${p}</span></div>`).join("");
+
+  const examHTML = examSummary.split("\n").map(l=>l.replace(/^[-*•\d.]+\s*/,"").trim()).filter(l=>l.length>4)
+    .map(l=>`<div class="exam-item"><span class="dot"></span><span>${l}</span></div>`).join("");
+
+  const tipsHTML = tips.split("\n").map(l=>l.replace(/^[-*•\d.★💡]+\s*/,"").trim()).filter(l=>l.length>6)
+    .map((t,i)=>`<div class="tip"><span class="tip-label">${["A","B","C"][i]||i+1}</span><span>${t}</span></div>`).join("");
+
+  win.document.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>${topic} — EasyLearn</title>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    @page { margin: 56px 64px; size: A4; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #fff;
+      color: #1a1710;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #1a1710;
+      margin-bottom: 32px;
+    }
+    .brand { font-size: 11px; color: #9a8e78; letter-spacing: 0.1em; text-transform: uppercase; }
+    h1 {
+      font-family: 'Source Serif 4', serif;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      color: #1a1710;
+      margin-bottom: 4px;
+    }
+    .meta { font-size: 12px; color: #9a8e78; }
+
+    /* Section labels */
+    .section {
+      margin-bottom: 28px;
+    }
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #9a8e78;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e0d8c8;
+    }
+
+    /* Explanation */
+    .explanation p {
+      font-family: 'Source Serif 4', serif;
+      font-size: 16px;
+      line-height: 1.85;
+      font-weight: 300;
+      color: #3a3020;
+      margin-bottom: 10px;
+    }
+
+    /* Key points */
+    .point {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0e8d8;
+    }
+    .num {
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
+      background: #b85c3a;
+      border-radius: 4px;
+      padding: 1px 6px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .point span:last-child {
+      font-family: 'Source Serif 4', serif;
+      font-size: 15px;
+      line-height: 1.7;
+      color: #3a3020;
+      font-weight: 300;
+    }
+
+    /* Exam summary */
+    .exam-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #c08820;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .exam-item span:last-child {
+      font-family: 'Source Serif 4', serif;
+      font-size: 15px;
+      line-height: 1.7;
+      color: #3a3020;
+      font-weight: 300;
+    }
+
+    /* Key concepts table */
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 8px 12px; font-size: 13.5px; vertical-align: top; border-bottom: 1px solid #f0e8d8; line-height: 1.6; }
+    .term { font-weight: 500; color: #1a1710; width: 30%; font-size: 13px; }
+
+    /* Memory tips */
+    .tip {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      background: #f8f4ec;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+    }
+    .tip-label {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: #4e7a4c;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .tip span:last-child { font-size: 13.5px; line-height: 1.65; color: #3a3020; }
+
+    /* Divider */
+    hr { border: none; border-top: 1px solid #e0d8c8; margin: 24px 0; }
+
+    /* Footer */
+    .footer {
+      margin-top: 40px;
+      padding-top: 14px;
+      border-top: 1px solid #e0d8c8;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #c0b49a;
+    }
+
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <div class="brand">EasyLearn · Study Notes</div>
+      <h1>${topic}</h1>
+      <div class="meta">Generated ${new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}</div>
+    </div>
+  </div>
+
+  ${explanation ? `
+  <div class="section">
+    <div class="section-label">What this is about</div>
+    <div class="explanation">${explanation.split("\n").filter(l=>l.trim().length>5).map(l=>`<p>${l.trim()}</p>`).join("")}</div>
+  </div>
+  <hr/>` : ""}
+
+  ${pointsRaw.length ? `
+  <div class="section">
+    <div class="section-label">Key points</div>
+    ${pointsHTML}
+  </div>
+  <hr/>` : ""}
+
+  ${examHTML ? `
+  <div class="section">
+    <div class="section-label">For the exam</div>
+    ${examHTML}
+  </div>
+  <hr/>` : ""}
+
+  ${tipsHTML ? `
+  <div class="section">
+    <div class="section-label">Memory tips</div>
+    ${tipsHTML}
+  </div>
+  <hr/>` : ""}
+
+  ${conceptsRaw ? `
+  <div class="section">
+    <div class="section-label">Key concepts</div>
+    <table>${conceptsRaw}</table>
+  </div>` : ""}
+
+  <div class="footer">
+    <span>EasyLearn · easylearn.local</span>
+    <span>${topic}</span>
+  </div>
+
+  <script>window.onload = () => { setTimeout(() => window.print(), 400); }</script>
+</body>
+</html>`);
   win.document.close();
 }
 
@@ -747,13 +978,13 @@ function ChatBot({ summaryContext, concepts, points }) {
       {/* ── Full/half-screen chat panel ── */}
       {open && (
         <div style={{
-          position:"fixed", bottom:0, right:0, zIndex:200,
-          width:"min(460px, 100vw)",
-          height:"min(680px, 92vh)",
+          position:"fixed", inset:0, zIndex:200,
+          width:"100vw",
+          height:"100vh",
           display:"flex", flexDirection:"column",
           background:"var(--paper)",
           border:"1.5px solid var(--border)",
-          borderRadius:"16px 16px 0 0",
+          borderRadius:0,
           boxShadow:"0 -4px 60px rgba(0,0,0,0.18)",
           animation:"popIn 0.25s cubic-bezier(.22,1,.36,1) both",
           overflow:"hidden",

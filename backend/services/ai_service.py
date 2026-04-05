@@ -1,126 +1,133 @@
 # services/ai_service.py
 #
-# Dual-model split — each model does what it is best at:
-#   Llama 3   → summaries   (structured writing, clear English prose)
-#   Mistral   → chat        (fast, conversational, knowledgeable Q&A)
+# Single model: llama3 for all tasks.
+# Llama 3 handles extraction, summarisation, and chat equally well.
+# Clear role-specific prompts ensure each task gets the best output.
 
 import httpx
 from config import OLLAMA_URL, AI_MODEL
 
-SUMMARY_MODEL    = "llama3"    # Best for structured, readable output
-CHAT_MODEL       = "mistral"   # Best for fast, accurate conversational answers
+MODEL = "llama3"   # One model, all tasks
 
-# ── Chunk extraction (Llama 3) ────────────────────────────────────────────────
+
+# ── 1. Chunk fact extraction ──────────────────────────────────────────────────
 CHUNK_PROMPT = """\
-Extract every important fact from the text. Output only bullet points.
+You are a precise note extractor. Read the text and pull out every important fact.
 
-Rules:
-- Start each line with "- "
-- Max 20 words per line
-- Only facts that are in the text — nothing extra
-- Keep all technical terms exactly as written
-- No intro sentence. No conclusion. Just the facts.
+Output format:
+- Start each fact with "- "
+- One fact per line, maximum 20 words
+- Use only information in the text — nothing added
+- Keep technical terms exactly as written
+- No introduction, no conclusion, just facts
 
 Text:
 {content}
 
 Facts:"""
 
-# ── Final structured summary (Llama 3) ───────────────────────────────────────
-FINAL_PROMPT = """\
-Write a structured study summary from the bullet points below.
-Your reader is a student who needs to understand this topic quickly and clearly.
 
-Rules (follow every one):
-- Short sentences. Max 18 words each.
-- Plain English. Define any technical term in the same sentence.
-- No "Imagine...", no analogies, no stories.
-- No filler: no "it is important to", "as we can see", "in summary".
-- No emojis inside the text — only use the emoji section markers below.
-- Every sentence must add new information. No repetition.
-- Simple Explanation: direct textbook-style paragraph. Start with a fact, not a question.
-- Exam Summary: 3 short sentences a student can memorise in one read.
+# ── 2. Final structured summary ───────────────────────────────────────────────
+FINAL_PROMPT = """\
+Write a clear, structured study summary. Your reader is a student preparing for an exam.
+
+Writing rules — follow every one:
+- Plain English. Max 18 words per sentence.
+- Define every technical term in the same sentence it appears.
+- No filler phrases. Every sentence must add new information.
+- No storytelling, no "Imagine...", no analogies.
+- Start the Simple Explanation with a direct factual statement.
+- Exam Summary: 3 punchy sentences the student can memorise in 30 seconds.
+- No emojis inside the text — only use the emoji markers shown below.
 
 Source material:
 {content}
 
----
-Reply in EXACTLY this format. Keep all emoji markers:
+Write output in EXACTLY this format. Keep every emoji marker:
 
 📚 TOPIC
-One sentence. Specific topic name. Not vague.
+One sentence. The exact topic name. Specific, not vague.
 
 ✅ IMPORTANT POINTS
-6 bullet points. Each starts with "- ".
-One factual sentence per point. Max 18 words. No repetition between points.
+- Point one. One clear fact. Max 18 words.
+- Point two.
+- Point three.
+- Point four.
+- Point five.
+- Point six.
 
 🔑 KEY CONCEPTS
-Up to 8 terms. Format:
-- Term: Definition. One sentence. Max 20 words.
+- Term: Definition in one clear sentence. Max 20 words.
+(Up to 8 terms)
 
 🧠 SIMPLE EXPLANATION
-4-5 sentences. What it is, how it works, why it matters.
-Start with a direct statement. No stories. No analogies.
+Write 4 to 5 sentences. Direct and factual.
+Explain what this topic is, how it works, and why it matters.
+No stories. No analogies.
 
 📝 EXAM SUMMARY
-3 sentences only. Short. Memorable. The most important exam facts.
+Three sentences only. Short and memorable.
+The three most important facts for the exam.
 
 🎯 QUICK TIPS TO REMEMBER
-3 memory aids. 1-2 sentences each.
-Acronyms, patterns, rules. No stories.
+- Tip A: One memory technique. Acronym, pattern, or rule. Max 2 sentences.
+- Tip B:
+- Tip C:
 """
 
-# ── Chat prompt (Mistral) ─────────────────────────────────────────────────────
-CHAT_PROMPT = """\
-You are Ducky, a knowledgeable AI study assistant — like ChatGPT, but focused on helping students.
-{notes_section}
 
-Instructions:
-- Answer the question directly and helpfully. Never say "I don't know".
-- If the question relates to the notes above, use them. Otherwise use your own knowledge.
-- Keep answers clear and concise. Use bullet points for lists.
-- Explain technical terms simply.
-- Match the tone: friendly but informative.
+# ── 3. Chat ───────────────────────────────────────────────────────────────────
+CHAT_PROMPT = """\
+You are Ducky, an AI study assistant inside EasyLearn. You work like ChatGPT — you can answer any question on any topic.
+{notes_block}
+
+How to respond:
+- Answer directly and helpfully. Never say "I don't know" or "I can't help with that."
+- If the question relates to the student's notes, use them as the primary source.
+- For anything not in the notes, answer from your own general knowledge.
+- Keep answers clear and focused. Use bullet points for lists of 3 or more items.
+- Explain technical terms simply. Be friendly but informative.
+- If generating exam questions, number them clearly and make them exam-quality.
 
 Student: {message}
 Ducky:"""
 
 
+# ── Core functions ─────────────────────────────────────────────────────────────
+
 async def generate_chunk_summary(content: str, timeout: float = 300.0) -> str:
-    """Llama 3 extracts clean facts from a raw text chunk."""
-    return await _call(CHUNK_PROMPT.format(content=content), SUMMARY_MODEL, timeout)
+    return await _call(CHUNK_PROMPT.format(content=content), timeout)
 
 
 async def generate_final_summary(content: str, timeout: float = 600.0) -> str:
-    """Llama 3 writes the full structured student summary."""
-    return await _call(FINAL_PROMPT.format(content=content), SUMMARY_MODEL, timeout)
+    return await _call(FINAL_PROMPT.format(content=content), timeout)
 
 
 async def generate_chat_reply(message: str, context: str = "", timeout: float = 90.0) -> str:
-    """Mistral answers the student's chat question — from notes or general knowledge."""
-    notes_section = (
-        f"You have access to the student's uploaded notes:\n\n{context[:2800]}\n\nUse these as your primary source when relevant."
+    notes_block = (
+        f"\nYou have the student's uploaded notes below. Use them as your primary source when relevant.\n\n"
+        f"--- Student Notes ---\n{context[:3000]}\n--- End of Notes ---\n"
         if context.strip() else
-        "No notes uploaded yet. Answer from your general knowledge."
+        "\nNo notes uploaded yet. Answer any question from your general knowledge.\n"
     )
-    prompt = CHAT_PROMPT.format(notes_section=notes_section, message=message.strip())
-    return await _call(prompt, CHAT_MODEL, timeout)
+    prompt = CHAT_PROMPT.format(notes_block=notes_block, message=message.strip())
+    return await _call(prompt, timeout)
 
 
-async def _call(prompt: str, model: str, timeout: float) -> str:
-    """Send prompt to Ollama. Fallback to AI_MODEL from config if model not found."""
-    payload = {"model": model, "prompt": prompt, "stream": False}
+async def _call(prompt: str, timeout: float) -> str:
+    """Call Ollama with llama3. Falls back to AI_MODEL from config if not found."""
+    payload = {"model": MODEL, "prompt": prompt, "stream": False}
     try:
         async with httpx.AsyncClient(timeout=timeout) as c:
             r = await c.post(OLLAMA_URL, json=payload)
             r.raise_for_status()
         data = r.json()
         if "response" not in data:
-            raise KeyError(f"Unexpected Ollama keys: {list(data.keys())}")
+            raise KeyError(f"Unexpected Ollama response: {list(data.keys())}")
         return data["response"].strip()
     except httpx.HTTPStatusError as e:
-        if e.response.status_code == 404 and model != AI_MODEL:
-            print(f"⚠ Model '{model}' not found — falling back to '{AI_MODEL}'")
+        if e.response.status_code == 404 and MODEL != AI_MODEL:
+            print(f"⚠  llama3 not found — falling back to {AI_MODEL}")
             payload["model"] = AI_MODEL
             async with httpx.AsyncClient(timeout=timeout) as c:
                 r = await c.post(OLLAMA_URL, json=payload)
