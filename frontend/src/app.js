@@ -1275,13 +1275,8 @@ function SummaryPage({ data, fileNames, onBack }) {
                 return(
                   <div key={i} style={{display:"flex",gap:14,alignItems:"flex-start",
                     padding:"11px 0",borderBottom:"1px solid var(--border)"}}>
-                    <div style={{width:20,height:20,borderRadius:"50%",
-                      background:"var(--yellow)",opacity:0.85,flexShrink:0,marginTop:2,
-                      display:"flex",alignItems:"center",justifyContent:"center"}}>
-                      <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                        <polyline points="1.5 4.5 3.5 6.5 7.5 2.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
+                    <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:600,
+                      color:"var(--muted)",flexShrink:0,marginTop:3,minWidth:16}}>{i+1}.</span>
                     <p style={{fontFamily:"'Crimson Pro',serif",fontSize:17,lineHeight:1.75,
                       color:"var(--ink2)",fontWeight:300}}>{clean}</p>
                   </div>
@@ -1305,7 +1300,9 @@ function SummaryPage({ data, fileNames, onBack }) {
                     <div key={i} style={{display:"flex",gap:12,alignItems:"flex-start",
                       background:"var(--paper2)",border:"1px solid var(--border)",
                       borderRadius:12,padding:"13px 16px"}}>
-                      <span style={{fontSize:16,flexShrink:0,marginTop:1,lineHeight:1}}>💡</span>
+                      <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:700,
+                        color:"var(--sage)",flexShrink:0,marginTop:3,
+                        minWidth:18}}>{["A","B","C","D"][i]||i+1}</span>
                       <p style={{fontFamily:"'Crimson Pro',serif",fontSize:17,lineHeight:1.7,
                         color:"var(--ink2)",fontWeight:300}}>{clean}</p>
                     </div>
@@ -1324,10 +1321,9 @@ function SummaryPage({ data, fileNames, onBack }) {
                 <div key={i} className="fade-up" style={{animationDelay:`${i*0.05}s`,
                   display:"flex",gap:16,padding:"13px 0",
                   borderBottom:"1px solid var(--border)",alignItems:"flex-start"}}>
-                  <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:600,
-                    color:"var(--paper)",background:"var(--terra)",borderRadius:5,
-                    padding:"2px 6px",flexShrink:0,marginTop:3,letterSpacing:"0.03em"}}>
-                    {String(i+1).padStart(2,"0")}
+                  <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,fontWeight:500,
+                    color:"var(--muted)",flexShrink:0,marginTop:3,minWidth:22}}>
+                    {i+1}.
                   </span>
                   <p style={{fontFamily:"'Crimson Pro',serif",fontSize:17,lineHeight:1.7,
                     color:"var(--ink2)",fontWeight:300}}>{p}</p>
