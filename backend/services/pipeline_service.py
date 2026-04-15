@@ -21,11 +21,11 @@ SUPPORTED_PDF_EXT   = {"pdf"}
 
 # Larger chunks = fewer AI calls = much faster.
 # 3000 words ≈ ~2200 tokens — comfortably within llama3's 4096 context.
-FAST_CHUNK_SIZE = 3000
+FAST_CHUNK_SIZE = 4000   # 9-page PDF (~4500 words) = 2 chunks max
 
 # Cap the merged facts sent to the final summary call.
 # Beyond ~6000 words the model sees diminishing returns and slows down.
-MERGE_CAP_WORDS = 6000
+MERGE_CAP_WORDS = 4000   # Keep final prompt input tight for 3b model speed
 
 
 def _get_ext(filename: str) -> str:

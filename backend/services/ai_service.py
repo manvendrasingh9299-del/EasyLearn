@@ -1,90 +1,65 @@
 # services/ai_service.py
 #
-# Llama 3  → summaries  (structured, clear writing)
-# Mistral  → chat       (fast, conversational, general knowledge)
-#
-# Speed optimisations:
-#   - num_predict capped so the model stops when done instead of padding
-#   - temperature 0 on summary = deterministic, no wasted exploration
-#   - Chunk prompt is minimal — fewer input tokens = faster first token
-#   - Final prompt skips redundant instructions already baked into format
+# Llama 3.2:3b  → summaries
+# Mistral:instruct → chat
 
 import httpx
 from config import OLLAMA_URL, AI_MODEL
 
-SUMMARY_MODEL = "llama3"
-CHAT_MODEL    = "mistral"
+SUMMARY_MODEL = "llama3.2:3b"
+CHAT_MODEL    = "mistral:instruct"
 
 
-# ── 1. Chunk extraction — Llama 3 ─────────────────────────────────────────────
-# Kept deliberately short. Fewer prompt tokens = faster processing.
-# Each chunk is ~1000 words → ~750 tokens input. Cap output at 400 tokens.
+# ── 1. Chunk extraction ────────────────────────────────────────────────────────
 CHUNK_PROMPT = """\
-Extract every important fact from the text below as bullet points.
-- One fact per line starting with "- "
-- Max 15 words per line
-- Only facts from the text, nothing added
-- Keep all technical terms exactly as written
+Extract the key facts from the text below. Write one fact per line, starting with "- ". \
+Maximum 15 words per line. Only use information from the text.
 
 Text:
 {content}
 
-Facts:"""
+Key facts:"""
 
 
-# ── 2. Final structured summary — Llama 3 ────────────────────────────────────
-# Single-pass: takes the merged chunk facts and writes the full summary.
-# No intermediate rewrites — one call, one output.
+# ── 2. Final structured summary ───────────────────────────────────────────────
+# Rules kept very short to reduce input tokens.
+# Placeholder lines removed — they confused the model and wasted tokens.
 FINAL_PROMPT = """\
-Write a study summary from these bullet points. Reader: exam student.
+You are a study assistant. Write a structured summary from the notes below.
+Use plain English. Keep sentences short (max 18 words). Define technical terms simply.
+Do not write stories or use "Imagine...". No emojis inside the text content.
 
-Rules:
-- Plain English. Max 18 words per sentence.
-- Define every technical term in the same sentence it appears.
-- No filler. No stories. No "Imagine". Start explanation with a fact.
-- Exam Summary: 3 short memorable sentences.
-- No emojis inside text — only the markers below.
-
-Material:
+Notes:
 {content}
 
-EXACTLY this format:
+Write your response in this EXACT format (keep the emoji markers, they are required):
 
 📚 TOPIC
-One specific sentence naming the exact topic.
+Write one sentence stating exactly what this topic is about.
 
 ✅ IMPORTANT POINTS
-- Fact one. Max 18 words.
-- Fact two.
-- Fact three.
-- Fact four.
-- Fact five.
-- Fact six.
+Write exactly 6 bullet points. Each starts with "- " and is one factual sentence.
 
 🔑 KEY CONCEPTS
-- Term: Definition, one sentence, max 20 words.
-(Up to 8 terms)
+Write up to 8 terms. Format: "- Term: definition in one sentence."
 
 🧠 SIMPLE EXPLANATION
-4-5 direct factual sentences. What it is, how it works, why it matters.
+Write 4 sentences explaining what this topic is, how it works, and why it matters. Start with a direct fact.
 
 📝 EXAM SUMMARY
-Three sentences. Short. Memorable. The 3 most important exam facts.
+Write exactly 3 short sentences covering the most important exam facts.
 
 🎯 QUICK TIPS TO REMEMBER
-- A: Memory technique — acronym, pattern or rule.
-- B:
-- C:
+Write 3 memory tips labelled A, B, C. Each is one sentence with a useful technique.
 """
 
 
-# ── 3. Chat — Mistral ─────────────────────────────────────────────────────────
-# Mistral is fast and conversational. Perfect for quick Q&A.
-# Notes injected as context so it answers from the student's material first.
+# ── 3. Chat ────────────────────────────────────────────────────────────────────
 CHAT_PROMPT = """\
-You are Ducky, an AI study assistant. Answer like ChatGPT — helpfully and directly.
+You are Ducky, a helpful AI study assistant inside EasyLearn. Answer like ChatGPT — directly, clearly, and helpfully.
 {notes_block}
-Rules: answer any question; use notes when relevant, otherwise use your knowledge; never say "I don't know"; use bullet points for lists; explain terms simply.
+Rules: answer any question the student asks; use the notes when relevant, otherwise use your own knowledge; \
+never say "I don't know"; use bullet points when listing multiple items; keep answers focused.
 
 Student: {message}
 Ducky:"""
@@ -93,40 +68,37 @@ Ducky:"""
 # ── Core functions ─────────────────────────────────────────────────────────────
 
 async def generate_chunk_summary(content: str, timeout: float = 120.0) -> str:
-    """Fast fact extraction from one text chunk using Llama 3."""
     return await _call(
         prompt=CHUNK_PROMPT.format(content=content),
         model=SUMMARY_MODEL,
         timeout=timeout,
-        num_predict=350,   # facts list — no need for more
-        temperature=0.1,   # near-deterministic, no rambling
+        num_predict=400,
+        temperature=0.1,
     )
 
 
 async def generate_final_summary(content: str, timeout: float = 300.0) -> str:
-    """Full structured summary from merged chunk facts using Llama 3."""
     return await _call(
         prompt=FINAL_PROMPT.format(content=content),
         model=SUMMARY_MODEL,
         timeout=timeout,
-        num_predict=900,   # enough for all 6 sections
+        num_predict=1200,   # must be high enough to complete all 6 sections
         temperature=0.2,
     )
 
 
-async def generate_chat_reply(message: str, context: str = "", timeout: float = 60.0) -> str:
-    """Fast conversational reply from Mistral."""
+async def generate_chat_reply(message: str, context: str = "", timeout: float = 90.0) -> str:
     notes_block = (
-        f"\nStudent's uploaded notes (use as primary source when relevant):\n"
+        f"\nThe student has uploaded these notes. Use them as your primary source when relevant:\n"
         f"---\n{context[:2500]}\n---\n"
         if context.strip()
-        else "\nNo notes uploaded. Answer from your own knowledge.\n"
+        else "\nNo notes have been uploaded yet. Answer from your general knowledge.\n"
     )
     return await _call(
         prompt=CHAT_PROMPT.format(notes_block=notes_block, message=message.strip()),
         model=CHAT_MODEL,
         timeout=timeout,
-        num_predict=500,   # chat answers should be focused, not essays
+        num_predict=500,
         temperature=0.4,
     )
 
@@ -135,21 +107,17 @@ async def _call(
     prompt: str,
     model: str,
     timeout: float,
-    num_predict: int = 800,
+    num_predict: int = 1200,
     temperature: float = 0.2,
 ) -> str:
-    """
-    Call Ollama with speed-tuned options.
-    Falls back to AI_MODEL from config if the requested model is not found.
-    """
     payload = {
         "model":  model,
         "prompt": prompt,
         "stream": False,
         "options": {
-            "num_predict": num_predict,   # hard cap on output tokens = no padding
-            "temperature": temperature,    # lower = faster + more consistent
-            "num_ctx":     4096,           # context window — enough for all tasks
+            "num_predict": num_predict,
+            "temperature": temperature,
+            "num_ctx":     4096,
             "top_k":       40,
             "top_p":       0.9,
         },
@@ -161,12 +129,19 @@ async def _call(
             r.raise_for_status()
         data = r.json()
         if "response" not in data:
-            raise KeyError(f"Unexpected Ollama response: {list(data.keys())}")
-        return data["response"].strip()
+            raise KeyError(f"Unexpected Ollama response keys: {list(data.keys())}")
+        result = data["response"].strip()
+
+        # Safety check — if model cut off before writing the TOPIC section,
+        # the response is unusable. Log it so you can see what happened.
+        if "📚" not in result and "TOPIC" not in result:
+            print(f"⚠  Summary appears incomplete. Response preview: {result[:200]}")
+
+        return result
 
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 404 and model != AI_MODEL:
-            print(f"⚠  Model '{model}' not found — falling back to '{AI_MODEL}'")
+            print(f"⚠  Model '{model}' not found — check 'ollama list'. Falling back to '{AI_MODEL}'")
             payload["model"] = AI_MODEL
             async with httpx.AsyncClient(timeout=timeout) as c:
                 r = await c.post(OLLAMA_URL, json=payload)
