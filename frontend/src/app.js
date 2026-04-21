@@ -1,6 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 
-const API = "http://127.0.0.1:8000/api/v1";
+// Local:  http://127.0.0.1:8000/api/v1
+// Kaggle: paste your ngrok URL here when deploying
+const API = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000/api/v1";
 
 const MASCOT = {
   idle:       "/mascot/idle.gif",

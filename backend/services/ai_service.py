@@ -1,27 +1,20 @@
 # services/ai_service.py
 #
-# Cloud replacement for Ollama.
-# Uses Groq API (free tier) — same function signatures as before,
-# so pipeline_service.py, chat_router.py, and everything else is unchanged.
+# Kaggle deployment version
+# Ollama runs locally inside Kaggle notebook on T4 GPU
 #
-# Models:
-#   llama-3.1-8b-instant  → summaries  (fast, structured output)
-#   mixtral-8x7b-32768    → chat       (large context, conversational)
-#
-# To switch provider later, only change _call() below.
+# Models (both pulled in the Kaggle notebook setup cell):
+#   llama3.2:3b      → summaries  (structured, clear output)
+#   mistral:instruct → chat       (fast, conversational)
 
-import os
-from groq import AsyncGroq
+import httpx
+from config import OLLAMA_URL, AI_MODEL
 
-SUMMARY_MODEL = "llama-3.1-8b-instant"
-CHAT_MODEL    = "mixtral-8x7b-32768"
-
-# Reads GROQ_API_KEY from .env automatically
-_client = AsyncGroq(api_key=os.environ.get("GROQ_API_KEY"))
+SUMMARY_MODEL = "llama3.2:3b"
+CHAT_MODEL    = "mistral:instruct"
 
 
-# ── Prompts ────────────────────────────────────────────────────────────────────
-
+# ── Chunk extraction — Llama 3.2 ──────────────────────────────────────────────
 CHUNK_PROMPT = """\
 Extract the key facts from the text below. Write one fact per line starting with "- ". \
 Maximum 15 words per line. Only use information from the text.
@@ -32,6 +25,7 @@ Text:
 Key facts:"""
 
 
+# ── Final structured summary — Llama 3.2 ─────────────────────────────────────
 FINAL_PROMPT = """\
 You are a study assistant. Write a structured summary from the notes below.
 Use plain English. Keep sentences short (max 18 words). Define technical terms simply.
@@ -62,6 +56,7 @@ Write 3 memory tips labelled A, B, C. Each is one sentence with a useful techniq
 """
 
 
+# ── Chat — Mistral:instruct ───────────────────────────────────────────────────
 CHAT_PROMPT = """\
 You are Ducky, a helpful AI study assistant inside EasyLearn. Answer like ChatGPT — directly, clearly, and helpfully.
 {notes_block}
@@ -72,64 +67,68 @@ Student: {message}
 Ducky:"""
 
 
-# ── Reusable cloud call ────────────────────────────────────────────────────────
-
+# ── Reusable Ollama call with speed options ────────────────────────────────────
 async def _call(
     prompt: str,
     model: str,
-    max_tokens: int = 1200,
+    timeout: float = 300.0,
+    num_predict: int = 1200,
     temperature: float = 0.2,
 ) -> str:
     """
-    Single reusable function for all Groq API calls.
-    To switch provider (OpenAI, Gemini etc.), only change this function.
+    Call Ollama running inside Kaggle notebook.
+    Falls back to AI_MODEL from config if named model not found.
+    T4 GPU gives ~150-200 tok/s — much faster than local CPU.
     """
-    response = await _client.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=max_tokens,
-        temperature=temperature,
-    )
-    return response.choices[0].message.content.strip()
+    payload = {
+        "model":  model,
+        "prompt": prompt,
+        "stream": False,
+        "options": {
+            "num_predict": num_predict,
+            "temperature": temperature,
+            "num_ctx":     4096,
+            "top_k":       40,
+            "top_p":       0.9,
+        },
+    }
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as c:
+            r = await c.post(OLLAMA_URL, json=payload)
+            r.raise_for_status()
+        data = r.json()
+        if "response" not in data:
+            raise KeyError(f"Unexpected Ollama response: {list(data.keys())}")
+        result = data["response"].strip()
+        if model == SUMMARY_MODEL and "📚" not in result and "TOPIC" not in result:
+            print(f"⚠  Summary may be incomplete. Preview: {result[:200]}")
+        return result
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404 and model != AI_MODEL:
+            print(f"⚠  Model '{model}' not found — falling back to '{AI_MODEL}'")
+            payload["model"] = AI_MODEL
+            async with httpx.AsyncClient(timeout=timeout) as c:
+                r = await c.post(OLLAMA_URL, json=payload)
+                r.raise_for_status()
+            return r.json()["response"].strip()
+        raise
 
 
-# ── Public functions — identical signatures to the Ollama version ──────────────
-# pipeline_service.py and chat_router.py call these. Nothing there changes.
-
-async def generate_chunk_summary(content: str, timeout: float = 60.0) -> str:
-    """Extract key facts from one text chunk."""
-    return await _call(
-        prompt=CHUNK_PROMPT.format(content=content),
-        model=SUMMARY_MODEL,
-        max_tokens=400,
-        temperature=0.1,
-    )
+async def generate_chunk_summary(content: str, timeout: float = 120.0) -> str:
+    return await _call(CHUNK_PROMPT.format(content=content), SUMMARY_MODEL, timeout, num_predict=400, temperature=0.1)
 
 
-async def generate_final_summary(content: str, timeout: float = 120.0) -> str:
-    """Generate the full 6-section structured summary."""
-    result = await _call(
-        prompt=FINAL_PROMPT.format(content=content),
-        model=SUMMARY_MODEL,
-        max_tokens=1200,
-        temperature=0.2,
-    )
-    if "📚" not in result and "TOPIC" not in result:
-        print(f"⚠  Summary may be incomplete. Preview: {result[:200]}")
-    return result
+async def generate_final_summary(content: str, timeout: float = 300.0) -> str:
+    return await _call(FINAL_PROMPT.format(content=content), SUMMARY_MODEL, timeout, num_predict=1200, temperature=0.2)
 
 
-async def generate_chat_reply(message: str, context: str = "", timeout: float = 30.0) -> str:
-    """Answer a student's chat question using Mixtral."""
+async def generate_chat_reply(message: str, context: str = "", timeout: float = 90.0) -> str:
     notes_block = (
-        f"\nThe student has uploaded these notes. Use them as your primary source:\n"
-        f"---\n{context[:3000]}\n---\n"
-        if context.strip()
-        else "\nNo notes uploaded. Answer from your general knowledge.\n"
+        f"\nStudent's uploaded notes (use as primary source when relevant):\n---\n{context[:2500]}\n---\n"
+        if context.strip() else
+        "\nNo notes uploaded. Answer from your own knowledge.\n"
     )
     return await _call(
-        prompt=CHAT_PROMPT.format(notes_block=notes_block, message=message.strip()),
-        model=CHAT_MODEL,
-        max_tokens=600,
-        temperature=0.4,
+        CHAT_PROMPT.format(notes_block=notes_block, message=message.strip()),
+        CHAT_MODEL, timeout, num_predict=500, temperature=0.4,
     )
