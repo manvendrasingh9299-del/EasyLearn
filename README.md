@@ -326,7 +326,7 @@ Handwritten notes work via OCR — clearer handwriting gives better results.
 - All AI processing happens locally (or on your own Kaggle session) — your files never go to a third-party AI server
 - The `uploads/` folder is temporary — files are deleted after processing
 - Never commit your `.env` file to Git
-- The `venv/` folder is already in `.gitignore`
+- The `venv/ folder is already in `.gitignore`
 - Large PDFs (10+ pages) may take several minutes depending on your hardware
 - Kaggle sessions time out after ~20 minutes of browser inactivity — leave the keep-alive cell running while demoing
 
