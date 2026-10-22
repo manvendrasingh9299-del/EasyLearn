@@ -104,4 +104,12 @@ source venv/bin/activate
 
 pip install -r requirements.txt
 cp .env.example .env
-    
+    Configure your MongoDB connection, Ollama endpoint, and secret key in backend/.env.
+    4. Install Frontend Dependencies
+    cd ../frontend
+npm install
+5. Run the Application
+
+From the project root:
+bash start.sh
+Alternatively, start the backend and frontend separately according to their configurations.
