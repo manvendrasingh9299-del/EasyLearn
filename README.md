@@ -1,4 +1,5 @@
 <div align="center">
+
 EasyLearn
 
 AI-Powered Academic Learning System
@@ -8,6 +9,9 @@ Transform PDFs, images, and handwritten notes into structured summaries, flashca
 Built with React, FastAPI, MongoDB, Llama 3.2, and Mistral.
 
 </div>
+
+⸻
+
 Overview
 
 EasyLearn is a full-stack AI-powered learning application that helps students understand concepts and prepare for examinations. It extracts text from documents and images, processes the content using large language models, and generates structured learning materials.
@@ -27,23 +31,23 @@ Features
 * Study History: Store and retrieve summaries using MongoDB.
 * Dark Mode: A clean, dark-themed study interface.
 * Flexible Deployment: Run locally or use a Kaggle GPU backend.
-  
+
 Tech Stack
 
-| Component | Technologies |
-|---|---|
-| Frontend | React 18, JavaScript, CSS |
-| Backend | Python, FastAPI, Uvicorn |
-| AI Models | Llama 3.2:3b, Mistral Instruct |
-| AI Runtime | Ollama |
-| Database | MongoDB Atlas / MongoDB |
-| PDF Processing | pdfplumber |
-| OCR | Tesseract, pytesseract |
-| HTTP Client | HTTPX |
-| GPU Infrastructure | Kaggle T4 GPU |
-| Tunneling | ngrok |
+Component	Technologies
+Frontend	React 18, JavaScript, CSS
+Backend	Python, FastAPI, Uvicorn
+AI Models	Llama 3.2:3b, Mistral Instruct
+AI Runtime	Ollama
+Database	MongoDB Atlas / MongoDB
+PDF Processing	pdfplumber
+OCR	Tesseract, pytesseract
+HTTP Client	HTTPX
+GPU Infrastructure	Kaggle T4 GPU
+Tunneling	ngrok
 
 Architecture
+
 flowchart TD
     A[React Frontend] --> B[FastAPI Backend]
     B --> C[Document Processing]
@@ -52,10 +56,16 @@ flowchart TD
     D --> F[Text Chunking]
     E --> F
     F --> G[Llama 3.2]
+    G --> H[Structured Summary]
+    H --> I[MongoDB]
+    H --> A
+    A --> J[Ducky AI]
+    J --> K[Mistral Instruct]
+    K --> A
 
-    Project Structure
-    
-    EasyLearn/
+Project Structure
+
+EasyLearn/
 ├── backend/
 │   ├── main.py
 │   ├── config.py
@@ -80,6 +90,7 @@ flowchart TD
 ├── easylearn_kaggle.ipynb
 ├── start.sh
 └── README.md
+
 Getting Started
 
 Prerequisites
@@ -91,25 +102,106 @@ Prerequisites
 * Tesseract OCR
 
 1. Clone the Repository
+
 git clone https://github.com/manvendrasingh9299-del/EasyLearn.git
 cd EasyLearn
+
 2. Download AI Models
+
 ollama pull llama3.2:3b
 ollama pull mistral:instruct
-3. Configure the Backend
-cd backend
 
+3. Configure the Backend
+
+cd backend
 python -m venv venv
 source venv/bin/activate
-
 pip install -r requirements.txt
 cp .env.example .env
-    Configure your MongoDB connection, Ollama endpoint, and secret key in backend/.env.
-    4. Install Frontend Dependencies
-    cd ../frontend
+
+Configure your MongoDB connection, Ollama endpoint, and secret key in backend/.env.
+
+4. Install Frontend Dependencies
+
+cd ../frontend
 npm install
+
 5. Run the Application
 
 From the project root:
+
 bash start.sh
+
 Alternatively, start the backend and frontend separately according to their configurations.
+
+AI Models
+
+Task	Model
+Text extraction and chunk analysis	Llama 3.2:3b
+Structured summary generation	Llama 3.2:3b
+Chatbot responses	Mistral Instruct
+Quiz generation	Mistral Instruct
+Exam question generation	Mistral Instruct
+
+API Endpoints
+
+Method	Endpoint	Description
+POST	/api/v1/upload	Upload files and generate summaries
+GET	/api/v1/summaries	Retrieve saved summaries
+DELETE	/api/v1/summaries/{name}	Delete a summary
+POST	/api/v1/auth/signup	Register a user
+POST	/api/v1/auth/login	Authenticate a user
+GET	/api/v1/auth/me	Retrieve the current user
+POST	/api/v1/chat	Interact with Ducky AI
+GET	/health	Check backend health
+
+Interactive API documentation: http://localhost:8000/docs
+
+Supported File Types
+
+Format	Extensions	Processing
+PDF	.pdf	pdfplumber
+Images	.jpg, .jpeg, .png, .webp	Tesseract OCR
+
+Handwritten note recognition depends on image quality and handwriting clarity.
+
+Deployment
+
+EasyLearn supports two deployment configurations:
+
+* Local: Run the frontend, backend, database, and AI models on your own machine.
+* Kaggle GPU: Run AI inference on a Kaggle GPU and connect the application through an ngrok tunnel.
+
+Remote deployment requires the appropriate environment configuration. Kaggle sessions and ngrok URLs may be temporary.
+
+Security
+
+* Keep credentials and secret keys in environment variables.
+* Never commit .env files to GitHub.
+* Configure database access controls appropriately.
+* Ensure temporary uploads are deleted as intended.
+* Verify authentication and authorization for protected endpoints.
+
+Future Improvements
+
+* Improved handwritten text recognition.
+* Spaced repetition for flashcards.
+* Subject-wise organization and search.
+* Automated backend and frontend testing.
+* Improved AI response streaming.
+
+Author
+
+Manvendra Singh
+
+Computer Science and Engineering | AI and Full-Stack Development
+
+GitHub Profile
+
+⸻
+
+<div align="center">
+
+Built to make learning more structured, accessible, and effective.
+
+</div>
