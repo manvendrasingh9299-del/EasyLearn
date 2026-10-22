@@ -4,9 +4,7 @@ EasyLearn
 
 AI-Powered Academic Learning System
 
-Transform PDFs, images, and handwritten notes into structured summaries, flashcards, quizzes, and exam-focused questions using open-source AI models.
-
-Built with React, FastAPI, MongoDB, Llama 3.2, and Mistral.
+An AI-powered study assistant that transforms PDFs, images, and handwritten notes into structured summaries, flashcards, quizzes, and exam-focused questions using Llama 3.2 and Mistral.
 
 </div>
 
@@ -14,22 +12,22 @@ Built with React, FastAPI, MongoDB, Llama 3.2, and Mistral.
 
 Overview
 
-EasyLearn is a full-stack AI-powered learning application that helps students understand concepts and prepare for examinations. It extracts text from documents and images, processes the content using large language models, and generates structured learning materials.
+EasyLearn is a full-stack academic learning application designed to help students understand concepts and prepare for examinations. It extracts text from documents and images, processes the content using AI models, and generates structured learning materials.
 
-The application supports local AI inference through Ollama and remote GPU inference through Kaggle.
+The application supports local AI inference through Ollama and remote GPU inference using Kaggle.
 
 Features
 
-* AI Summarization: Generate structured summaries from uploaded study materials.
-* Document Processing: Extract text from PDFs, images, and handwritten notes using pdfplumber and Tesseract OCR.
+* AI Summarization: Generate structured summaries from study materials.
+* Document Processing: Extract text from PDFs, images, and handwritten notes.
 * Interactive Flashcards: Review important concepts using flip cards.
-* Ducky AI: Chat with an AI assistant about study materials and general topics.
+* Ducky AI Chatbot: Ask questions about study materials or general topics.
 * Quiz Generation: Generate multiple-choice quizzes from uploaded notes.
 * Exam Preparation: Generate eight important exam-style questions.
 * PDF Export: Export summaries as formatted PDF documents.
-* User Authentication: Secure registration and login using JWT.
+* User Authentication: Register and log in using JWT authentication.
 * Study History: Store and retrieve summaries using MongoDB.
-* Dark Mode: A clean, dark-themed study interface.
+* Dark Mode: Study using a dark-themed interface.
 * Flexible Deployment: Run locally or use a Kaggle GPU backend.
 
 Tech Stack
@@ -59,47 +57,58 @@ flowchart TD
     G --> H[Structured Summary]
     H --> I[MongoDB]
     H --> A
-    A --> J[Ducky AI]
+    A --> J[Ducky AI Chatbot]
     J --> K[Mistral Instruct]
     K --> A
 
 Project Structure
 
 EasyLearn/
+├── start.sh
+├── easylearn_kaggle.ipynb
+├── README.md
+│
 ├── backend/
 │   ├── main.py
 │   ├── config.py
 │   ├── database.py
+│   ├── .env.example
+│   ├── requirements.txt
+│   │
 │   ├── models/
+│   │   └── summary_model.py
+│   │
 │   ├── routers/
 │   │   ├── summary_router.py
 │   │   ├── auth_router.py
 │   │   └── chat_router.py
-│   ├── services/
-│   │   ├── ai_service.py
-│   │   ├── chunk_service.py
-│   │   ├── image_service.py
-│   │   ├── pdf_service.py
-│   │   └── pipeline_service.py
-│   ├── requirements.txt
-│   └── .env.example
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   └── package.json
-├── easylearn_kaggle.ipynb
-├── start.sh
-└── README.md
+│   │
+│   └── services/
+│       ├── ai_service.py
+│       ├── chunk_service.py
+│       ├── image_service.py
+│       ├── pdf_service.py
+│       └── pipeline_service.py
+│
+└── frontend/
+    ├── public/
+    │   ├── index.html
+    │   └── mascot/
+    ├── src/
+    │   ├── index.js
+    │   └── app.js
+    └── package.json
 
-Getting Started
+Installation and Setup
 
 Prerequisites
 
-* Python 3.10+
-* Node.js 18+
-* MongoDB or MongoDB Atlas
-* Ollama
-* Tesseract OCR
+Software	Requirement
+Python	3.10 or later
+Node.js	18 or later
+MongoDB	Local installation or MongoDB Atlas
+Ollama	Required for local AI inference
+Tesseract OCR	Required for image text extraction
 
 1. Clone the Repository
 
@@ -119,29 +128,45 @@ source venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 
-Configure your MongoDB connection, Ollama endpoint, and secret key in backend/.env.
+Configure the environment variables in backend/.env:
 
-4. Install Frontend Dependencies
+MONGO_URI=mongodb://localhost:27017
+DATABASE_NAME=easylearn_db
+OLLAMA_URL=http://localhost:11434/api/generate
+AI_MODEL=llama3.2:3b
+UPLOAD_DIR=uploads
+MAX_FILE_SIZE_MB=20
+CHUNK_SIZE=4000
+SECRET_KEY=your-secret-key-here
 
-cd ../frontend
+4. Configure the Frontend
+
+Open a new terminal and install the frontend dependencies:
+
+cd EasyLearn/frontend
 npm install
 
 5. Run the Application
 
-From the project root:
+From the project root, execute:
 
 bash start.sh
 
-Alternatively, start the backend and frontend separately according to their configurations.
+Alternatively, start the backend and frontend separately using their configured commands.
+
+Service	Default Address
+Frontend	http://localhost:3000
+Backend	http://localhost:8000
+API Documentation	http://localhost:8000/docs
 
 AI Models
 
-Task	Model
-Text extraction and chunk analysis	Llama 3.2:3b
-Structured summary generation	Llama 3.2:3b
-Chatbot responses	Mistral Instruct
-Quiz generation	Mistral Instruct
-Exam question generation	Mistral Instruct
+Task	Model	Runtime
+Chunk-level fact extraction	Llama 3.2:3b	Ollama
+Structured summary generation	Llama 3.2:3b	Ollama
+Chatbot responses	Mistral Instruct	Ollama
+Quiz generation	Mistral Instruct	Ollama
+Exam question generation	Mistral Instruct	Ollama
 
 API Endpoints
 
@@ -149,59 +174,38 @@ Method	Endpoint	Description
 POST	/api/v1/upload	Upload files and generate summaries
 GET	/api/v1/summaries	Retrieve saved summaries
 DELETE	/api/v1/summaries/{name}	Delete a summary
-POST	/api/v1/auth/signup	Register a user
+POST	/api/v1/auth/signup	Register a new user
 POST	/api/v1/auth/login	Authenticate a user
 GET	/api/v1/auth/me	Retrieve the current user
-POST	/api/v1/chat	Interact with Ducky AI
-GET	/health	Check backend health
-
-Interactive API documentation: http://localhost:8000/docs
+POST	/api/v1/chat	Send messages to Ducky AI
+GET	/health	Check server and database health
 
 Supported File Types
 
-Format	Extensions	Processing
-PDF	.pdf	pdfplumber
-Images	.jpg, .jpeg, .png, .webp	Tesseract OCR
+File Type	Extensions	Extraction Method
+PDF Documents	.pdf	pdfplumber
+Photographs	.jpg, .jpeg	Tesseract OCR
+Screenshots	.png	Tesseract OCR
+Web Images	.webp	Tesseract OCR
 
-Handwritten note recognition depends on image quality and handwriting clarity.
+Handwritten text recognition depends on handwriting clarity and image quality.
 
 Deployment
 
-EasyLearn supports two deployment configurations:
+EasyLearn supports two deployment configurations.
 
-* Local: Run the frontend, backend, database, and AI models on your own machine.
-* Kaggle GPU: Run AI inference on a Kaggle GPU and connect the application through an ngrok tunnel.
+Deployment	Description
+Local Deployment	Run the application and AI models on your own machine using Ollama.
+Kaggle GPU	Run AI inference on a Kaggle GPU and expose the backend through ngrok.
 
-Remote deployment requires the appropriate environment configuration. Kaggle sessions and ngrok URLs may be temporary.
+Remote deployment requires appropriate database credentials, environment variables, and API URL configuration. Kaggle sessions and ngrok URLs may be temporary.
 
 Security
 
-* Keep credentials and secret keys in environment variables.
-* Never commit .env files to GitHub.
-* Configure database access controls appropriately.
-* Ensure temporary uploads are deleted as intended.
-* Verify authentication and authorization for protected endpoints.
-
-Future Improvements
-
-* Improved handwritten text recognition.
-* Spaced repetition for flashcards.
-* Subject-wise organization and search.
-* Automated backend and frontend testing.
-* Improved AI response streaming.
-
-Author
-
-Manvendra Singh
-
-Computer Science and Engineering | AI and Full-Stack Development
-
-GitHub Profile
+* Store credentials and secret keys in environment variables.
+* Never commit .env files to the repository.
+* Configure appropriate database access controls.
+* Delete temporary uploads after processing as intended by the application.
+* Protect authenticated endpoints with proper authorization checks.
 
 ⸻
-
-<div align="center">
-
-Built to make learning more structured, accessible, and effective.
-
-</div>
