@@ -52,9 +52,56 @@ flowchart TD
     D --> F[Text Chunking]
     E --> F
     F --> G[Llama 3.2]
-    G --> H[Structured Summary]
-    H --> I[MongoDB]
-    H --> A
-    A --> J[Ducky AI]
-    J --> K[Mistral Instruct]
-    K --> A
+
+    Project Structure
+    
+    EasyLearn/
+├── backend/
+│   ├── main.py
+│   ├── config.py
+│   ├── database.py
+│   ├── models/
+│   ├── routers/
+│   │   ├── summary_router.py
+│   │   ├── auth_router.py
+│   │   └── chat_router.py
+│   ├── services/
+│   │   ├── ai_service.py
+│   │   ├── chunk_service.py
+│   │   ├── image_service.py
+│   │   ├── pdf_service.py
+│   │   └── pipeline_service.py
+│   ├── requirements.txt
+│   └── .env.example
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   └── package.json
+├── easylearn_kaggle.ipynb
+├── start.sh
+└── README.md
+Getting Started
+
+Prerequisites
+
+* Python 3.10+
+* Node.js 18+
+* MongoDB or MongoDB Atlas
+* Ollama
+* Tesseract OCR
+
+1. Clone the Repository
+git clone https://github.com/manvendrasingh9299-del/EasyLearn.git
+cd EasyLearn
+2. Download AI Models
+ollama pull llama3.2:3b
+ollama pull mistral:instruct
+3. Configure the Backend
+cd backend
+
+python -m venv venv
+source venv/bin/activate
+
+pip install -r requirements.txt
+cp .env.example .env
+    
