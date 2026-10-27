@@ -294,32 +294,27 @@ Then run `bash start.sh` as normal.
 
 ## How It Works
 
-### Summary pipeline
+### Summary Pipeline
 
-```mermaid
-flowchart TD
-    A[User uploads files] --> B[auth_router.py<br/>JWT authentication]
-    B --> C[summary_router.py<br/>validates and saves files temporarily]
-    C --> D[pipeline_service.py<br/>orchestrates the pipeline]
-    D --> E{File type?}
-    E -->|PDF| F[pdf_service.py]
-    E -->|Image / handwriting| G[image_service.py]
-    F --> H[chunk_service.py<br/>splits text into 4000-word chunks]
-    G --> H
-    H --> I[ai_service.py<br/>Llama 3.2:3b extracts facts per chunk]
-    I --> J[ai_service.py<br/>Llama 3.2:3b writes final summary]
-    J --> K[(MongoDB)]
-    K --> L[React frontend<br/>Topic, Explanation, Key Points,<br/>Concepts, Flashcards, Exam Tips]
-```
+| Step | Component | Responsibility |
+|:---:|---|---|
+| 1 | `auth_router.py` | Authenticates the request with JWT |
+| 2 | `summary_router.py` | Validates uploads and saves them temporarily |
+| 3 | `pipeline_service.py` | Orchestrates the full pipeline |
+| 4 | `pdf_service.py` / `image_service.py` | Extracts text from PDFs (pdfplumber) or images and handwriting (Tesseract OCR) |
+| 5 | `chunk_service.py` | Splits the text into 4000-word chunks |
+| 6 | `ai_service.py` | Llama 3.2:3b extracts key facts from each chunk |
+| 7 | `ai_service.py` | Llama 3.2:3b writes the final structured summary |
+| 8 | MongoDB | Stores the summary for history |
+| 9 | React frontend | Displays topic, explanation, key points, concepts, flashcards and exam tips |
 
-### Ducky chat pipeline
+### Ducky Chat Pipeline
 
-```mermaid
-flowchart LR
-    A[User opens Ducky] --> B[chat_router.py<br/>message + notes context]
-    B --> C[ai_service.py<br/>Mistral:instruct]
-    C --> D[Response streamed<br/>to frontend]
-```
+| Step | Component | Responsibility |
+|:---:|---|---|
+| 1 | `chat_router.py` | Receives the user message along with the notes context |
+| 2 | `ai_service.py` | Mistral:instruct answers from the notes or from general knowledge |
+| 3 | React frontend | Receives the streamed response and displays it |
 
 ---
 
