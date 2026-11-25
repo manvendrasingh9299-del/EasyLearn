@@ -115,13 +115,17 @@ async def process_multiple_files(files: list[tuple[str, str]]) -> dict:
     final_summary = await generate_final_summary(content_for_summary)
 
     # ── Step 4: Save to MongoDB ────────────────────────────────────────────────
-    await summary_collection.insert_one({
-        "filenames":     file_names,
-        "file_count":    len(files),
-        "summary":       final_summary,
-        "file_statuses": file_statuses,
-        "created_at":    datetime.now(timezone.utc),
-    })
+    try:
+        await summary_collection.insert_one({
+            "filenames":     file_names,
+            "file_count":    len(files),
+            "summary":       final_summary,
+            "file_statuses": file_statuses,
+            "created_at":    datetime.now(timezone.utc),
+        })
+    except Exception as exc:
+        # Don't let a DB outage invalidate a successful upload/summary.
+        print(f"⚠  Could not save summary to MongoDB: {exc}")
 
     # ── Step 5: Delete temp files ──────────────────────────────────────────────
     for file_path, _ in files:
