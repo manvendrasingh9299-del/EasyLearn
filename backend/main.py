@@ -14,9 +14,10 @@ from routers.chat_router import router as chat_router   # ← NEW
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     db_ok = await ping_database()
-    if not db_ok:
-        raise RuntimeError("Cannot connect to MongoDB — check MONGO_URI in .env")
-    print("✅ MongoDB connected")
+    if db_ok:
+        print("✅ MongoDB connected")
+    else:
+        print("⚠  MongoDB unreachable — DB-dependent endpoints will error until MongoDB is available")
     yield
     print("🛑 EasyLearn shutting down")
 
