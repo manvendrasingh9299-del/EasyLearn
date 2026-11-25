@@ -10,7 +10,7 @@ from pydantic import BaseModel, EmailStr
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 
-from database import db
+from database import users_collection
 
 router = APIRouter()
 bearer = HTTPBearer(auto_error=False)
@@ -21,7 +21,7 @@ ALGORITHM   = "HS256"
 TOKEN_EXPIRE_DAYS = 30
 
 pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
-users_col = db["users"]
+users_col = users_collection
 
 # ── Models ────────────────────────────────────────────────────────────────────
 class SignupRequest(BaseModel):
