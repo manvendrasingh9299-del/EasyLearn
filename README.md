@@ -1,4 +1,3 @@
-```markdown
 # EasyLearn
 
 <div align="center">
