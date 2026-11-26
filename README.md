@@ -2,8 +2,6 @@
 
 # EasyLearn
 
-### AI-Powered Study Assistant
-
 Upload PDFs, photos or handwritten notes and get back structured summaries, key concepts, flashcards, exam tips and an interactive AI chat.
 Powered by **Llama 3** and **Mistral**, running on a free **Kaggle T4 GPU** or entirely on your own machine.
 
