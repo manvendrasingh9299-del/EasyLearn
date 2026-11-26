@@ -1,225 +1,142 @@
-<div align="center">
-
+```markdown
 # EasyLearn
 
-Upload PDFs, photos or handwritten notes and get back structured summaries, key concepts, flashcards, exam tips and an interactive AI chat.
-Powered by **Llama 3** and **Mistral**, running on a free **Kaggle T4 GPU** or entirely on your own machine.
+<div align="center">
 
-![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-Python_3.10+-009688?logo=fastapi&logoColor=white)
-![MongoDB](https://img.shields.io/badge/MongoDB-Atlas_|_Local-47A248?logo=mongodb&logoColor=white)
-![Ollama](https://img.shields.io/badge/Ollama-Llama_3.2_|_Mistral-000000)
-![Tesseract](https://img.shields.io/badge/OCR-Tesseract-4B8BBE)
+<img src="https://raw.githubusercontent.com/manvendrasingh9299-del/EasyLearn/main/frontend/public/mascot/welcome.gif" alt="EasyLearn Ducky mascot" width="220">
 
-[Features](#features) · [Quick Start](#quick-start) · [Backend Options](#backend-options) · [API](#api-endpoints) · [Architecture](#how-it-works)
+### Turn PDFs and handwritten notes into ready-to-study content
+
+Upload documents, extract knowledge, and review it with summaries, flashcards, quizzes, exam questions, and an AI tutor.
+
+**[Live Demo](https://easy-learn-beta.vercel.app)** · **[Backend API](http://localhost:8000/docs)** · **[Quick Start](#quick-start)**
+
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Python-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Ollama](https://img.shields.io/badge/Ollama-Llama_3.2_|_Mistral-000000)](https://ollama.com/)
+[![Tesseract](https://img.shields.io/badge/OCR-Tesseract-4B8BBE)](https://github.com/tesseract-ocr/tesseract)
 
 </div>
 
 ---
 
-## Table of Contents
+## What EasyLearn Does
 
-1. [Features](#features)
-2. [AI Models](#ai-models)
-3. [Tech Stack](#tech-stack)
-4. [Quick Start](#quick-start)
-5. [Backend Options](#backend-options)
-6. [Starting the App](#starting-the-app)
-7. [How It Works](#how-it-works)
-8. [API Endpoints](#api-endpoints)
-9. [Configuration](#configuration)
-10. [Supported File Types](#supported-file-types)
-11. [Project Structure](#project-structure)
-12. [Notes](#notes)
-13. [What I Learned](#what-i-learned)
+EasyLearn converts study materials into an organized learning experience:
+
+| Upload | Understand | Practice | Review |
+|:---:|:---:|:---:|:---:|
+| PDF, images, scans, and handwritten notes | AI summaries and key concepts | Quizzes and exam questions | Flashcards and chat |
 
 ---
 
 ## Features
 
-### Study Tools
+### Document to Study Material
 
-| Feature | Details |
-|---|---|
-| **Multi-file upload** | One or many PDF, JPG, PNG or WEBP files |
-| **Smart extraction** | `pdfplumber` for PDFs, Tesseract OCR for images and handwriting |
-| **Structured summary** | Topic overview, key points, key concepts, simple explanation, exam summary, quick tips |
-| **Flashcards** | Interactive review with flip animation |
-| **PDF export** | Download your summary as a professionally formatted PDF |
-| **History** | Every summary is saved to MongoDB |
+- Upload multiple PDFs or images at once
+- Extract PDF text with `pdfplumber`
+- Read images and handwritten notes with Tesseract OCR
+- Generate a structured summary, key concepts, explanation, exam tips, and quick highlights
+- Export the final summary as a formatted PDF
+- Save summaries to MongoDB for later review
 
-### Ducky AI Chatbot
+### Ducky AI Tutor
 
-A full-screen assistant that answers questions from your notes and from general knowledge.
+- Chat about uploaded notes or ask general study questions
+- Generate multiple-choice quizzes
+- Create eight exam-style questions
+- Use a friendly animated study assistant
 
-| Tab | What it does |
-|---|---|
-| **Chat** | Ask anything, get clear answers |
-| **Quiz** | Auto-generated multiple-choice quiz from your notes |
-| **Questions** | 8 important exam-style questions from your notes |
+### Application Experience
 
-### Extras
-
+- JWT signup and login
 - Dark mode with a night-blue theme
-- JWT authentication (signup / login)
-- One-command startup with `start.sh`
-- Privacy-first: files never reach a third-party AI server
-
----
-
-## AI Models
-
-Both models run via [Ollama](https://ollama.com), locally on your machine or remotely on a free Kaggle T4 GPU.
-
-| Task | Model |
-|---|---|
-| Chunk extraction | `llama3.2:3b` |
-| Final summary | `llama3.2:3b` |
-| Ducky chatbot replies | `mistral:instruct` |
-| Quiz & question generation | `mistral:instruct` |
+- History management
+- Optional Kaggle T4 GPU backend
+- Private local processing with Ollama
+- One-command startup through `start.sh`
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
+| Area | Technology |
 |---|---|
-| **Frontend** | React 18, Crimson Pro, DM Sans |
-| **Backend** | FastAPI, Uvicorn, Python 3.10+ |
-| **AI** | Llama 3.2:3b + Mistral via Ollama |
-| **Database** | MongoDB Atlas (cloud) or local MongoDB |
-| **PDF** | pdfplumber |
-| **OCR** | Tesseract + pytesseract |
-| **HTTP** | httpx (async) |
-| **GPU backend** | Kaggle T4 x2 (free) + ngrok tunnel |
+| Frontend | React 18 |
+| Backend | FastAPI, Uvicorn |
+| Database | MongoDB Atlas or local MongoDB |
+| AI | Ollama, Llama 3.2:3b, Mistral Instruct |
+| PDF | pdfplumber |
+| OCR | Tesseract and pytesseract |
+| GPU Backend | Kaggle T4 x2 and ngrok |
+| HTTP | httpx |
+
+---
+
+## How It Works
+
+```mermaid
+flowchart LR
+    A[Upload PDF or Image] --> B[Text Extraction]
+    B --> C[Chunk Text]
+    C --> D[Llama 3.2]
+    D --> E[Structured Summary]
+    E --> F[MongoDB]
+    E --> G[React Interface]
+
+    H[Study Notes] --> I[Mistral]
+    I --> J[Chat, Quiz, or Questions]
+```
+
+1. FastAPI validates the request and temporarily stores uploaded files.
+2. PDFs are processed with `pdfplumber`; images are read using Tesseract OCR.
+3. Text is divided into chunks for processing.
+4. Llama 3.2 extracts important facts and writes the final summary.
+5. MongoDB stores the structured result.
+6. Mistral powers Ducky chat, quizzes, and exam questions.
 
 ---
 
 ## Quick Start
 
-Already set up? Just run:
+### Prerequisites
 
-```bash
-cd ~/EasyLearn
-bash start.sh
-```
-
-Then open **http://localhost:3000**.
-
-First time here? Pick a backend below, then come back to this step.
-
----
-
-## Backend Options
-
-EasyLearn supports two backend modes. Choose the one that fits your setup.
-
-| | Option A: Kaggle GPU | Option B: Local |
-|---|---|---|
-| **Cost** | Free | Free |
-| **Needs a GPU?** | No | Helpful, not required |
-| **Speed** | Fast (T4 x2) | Depends on your hardware |
-| **Setup effort** | Low | Medium |
-| **Privacy** | Your own Kaggle session | Everything stays on your machine |
-| **Caveat** | URL changes every session | Models need ~6 GB disk |
-
-<details>
-<summary><b>Option A: Kaggle T4 GPU (free, no local GPU needed)</b></summary>
-
-<br>
-
-Use this if you don't have a GPU or want faster AI responses for free.
-
-**1. Upload the notebook**
-Upload `easylearn_kaggle.ipynb` to [kaggle.com/code](https://kaggle.com/code).
-
-**2. Enable the GPU**
-Right panel → **Accelerator** → **GPU T4 x2** → Save.
-
-**3. Edit three cells before running**
-
-*Step 1: system packages (already includes `zstd`)*
-```python
-subprocess.run(['apt-get', 'install', '-y',
-    'zstd', 'tesseract-ocr', 'tesseract-ocr-eng',
-    'libgl1-mesa-glx', 'curl'
-], check=True, capture_output=False)
-```
-
-*Step 5: your MongoDB Atlas URI*
-```python
-MONGO_URI  = 'mongodb+srv://youruser:yourpassword@cluster0.xxxxx.mongodb.net'
-SECRET_KEY = 'your-long-random-secret-key'
-```
-
-*Step 7: your ngrok token (free at [dashboard.ngrok.com](https://dashboard.ngrok.com))*
-```python
-NGROK_TOKEN = 'your_ngrok_authtoken_here'
-```
-
-**4. Click Run All**
-
-**5. Copy the public URL** printed at the end:
-```
-https://xxxx-xx-xx-xxx-xx.ngrok-free.app
-```
-
-**6. Point the frontend at it**
-Paste it when `start.sh` asks, or set it in `frontend/.env.local`:
-```
-NEXT_PUBLIC_API_URL=https://xxxx-xx-xx-xxx-xx.ngrok-free.app/api/v1
-```
-
-> [!NOTE]
-> ngrok URLs expire when the Kaggle session ends. Each new session gives a new URL, so update your frontend `.env.local` each time.
-
-</details>
-
-<details>
-<summary><b>Option B: Run everything locally</b></summary>
-
-<br>
-
-Use this if you have Ollama installed and want everything on your own machine.
-
-**Prerequisites**
-
-| Tool | Link |
+| Requirement | Purpose |
 |---|---|
-| Python 3.10+ | [python.org](https://python.org) |
-| Node.js 18+ | [nodejs.org](https://nodejs.org) |
-| MongoDB | [mongodb.com/try/download/community](https://mongodb.com/try/download/community) |
-| Ollama | [ollama.com](https://ollama.com) |
-| Tesseract OCR | see below |
+| Python 3.10+ | FastAPI backend |
+| Node.js 18+ | React frontend |
+| Ollama | Local AI models |
+| MongoDB | Summary and account storage |
+| Tesseract OCR | Image and handwriting extraction |
 
-**Install Tesseract**
+### 1. Clone the Repository
 
 ```bash
-# macOS
-brew install tesseract
-
-# Ubuntu / Debian
-sudo apt install tesseract-ocr
+git clone https://github.com/manvendrasingh9299-del/EasyLearn.git
+cd EasyLearn
 ```
 
-**Pull the AI models** (one-time, ~6 GB total)
+### 2. Install Ollama Models
 
 ```bash
 ollama pull llama3.2:3b
 ollama pull mistral:instruct
 ```
 
-**Set up the backend**
+### 3. Configure the Backend
 
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+source venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Edit `backend/.env`:
+Open `backend/.env` and configure it:
+
 ```env
 MONGO_URI=mongodb://localhost:27017
 DATABASE_NAME=easylearn_db
@@ -228,213 +145,228 @@ AI_MODEL=llama3.2:3b
 UPLOAD_DIR=uploads
 MAX_FILE_SIZE_MB=20
 CHUNK_SIZE=4000
-SECRET_KEY=your-secret-key-here
+SECRET_KEY=replace-with-a-long-random-secret
 ```
 
-**Set up the frontend**
+### 4. Install the Frontend
 
 ```bash
 cd ../frontend
 npm install
+cd ..
 ```
 
-</details>
-
----
-
-## Starting the App
-
-### Option 1: One command (recommended)
+### 5. Start EasyLearn
 
 ```bash
-cd ~/EasyLearn
 bash start.sh
 ```
 
-### Option 2: Three terminals
+Open:
 
-```bash
-# Terminal 1: Ollama
-ollama serve
-
-# Terminal 2: Backend
-cd ~/EasyLearn/backend
-source venv/bin/activate
-uvicorn main:app --reload
-
-# Terminal 3: Frontend
-cd ~/EasyLearn/frontend
-npm start
-```
-
-Open **http://localhost:3000** in your browser.
-
-<details>
-<summary><b>Switching from Kaggle back to local</b></summary>
-
-<br>
-
-If you previously used a Kaggle ngrok URL and want to run locally:
-
-```bash
-# Remove the old ngrok URL
-sed -i 's|https://.*ngrok-free.app|http://localhost:8000|g' ~/EasyLearn/frontend/.env.local
-
-# Verify it changed
-cat ~/EasyLearn/frontend/.env.local
-```
-
-Then run `bash start.sh` as normal.
-
-</details>
+- Application: **http://localhost:3000**
+- API documentation: **http://localhost:8000/docs**
 
 ---
 
-## How It Works
+## Manual Startup
 
-### Summary Pipeline
+### Terminal 1 — Ollama
 
-| Step | Component | Responsibility |
-|:---:|---|---|
-| 1 | `auth_router.py` | Authenticates the request with JWT |
-| 2 | `summary_router.py` | Validates uploads and saves them temporarily |
-| 3 | `pipeline_service.py` | Orchestrates the full pipeline |
-| 4 | `pdf_service.py` / `image_service.py` | Extracts text from PDFs (pdfplumber) or images and handwriting (Tesseract OCR) |
-| 5 | `chunk_service.py` | Splits the text into 4000-word chunks |
-| 6 | `ai_service.py` | Llama 3.2:3b extracts key facts from each chunk |
-| 7 | `ai_service.py` | Llama 3.2:3b writes the final structured summary |
-| 8 | MongoDB | Stores the summary for history |
-| 9 | React frontend | Displays topic, explanation, key points, concepts, flashcards and exam tips |
+```bash
+ollama serve
+```
 
-### Ducky Chat Pipeline
+### Terminal 2 — Backend
 
-| Step | Component | Responsibility |
-|:---:|---|---|
-| 1 | `chat_router.py` | Receives the user message along with the notes context |
-| 2 | `ai_service.py` | Mistral:instruct answers from the notes or from general knowledge |
-| 3 | React frontend | Receives the streamed response and displays it |
+```bash
+cd backend
+source venv/bin/activate
+uvicorn main:app --reload
+```
+
+### Terminal 3 — Frontend
+
+```bash
+cd frontend
+npm start
+```
+
+---
+
+## Choose a Backend
+
+<table>
+<tr>
+<th width="50%">Run Locally</th>
+<th width="50%">Use Kaggle T4 GPU</th>
+</tr>
+<tr>
+<td>
+
+- No ngrok dependency
+- Better privacy
+- Uses local hardware
+- Requires Ollama
+- Requires around 6 GB for both models
+
+</td>
+<td>
+
+- No local GPU required
+- Fast Kaggle T4 x2 inference
+- Requires a Kaggle account
+- Requires an ngrok token
+- Public URL changes per session
+
+</td>
+</tr>
+</table>
+
+### Kaggle Setup
+
+1. Upload `easylearn_kaggle.ipynb` to Kaggle.
+2. Select **GPU T4 x2** in the accelerator settings.
+3. Add your MongoDB Atlas URI.
+4. Add a long random `SECRET_KEY`.
+5. Add your ngrok token.
+6. Run every notebook cell.
+7. Copy the generated public URL.
+8. Add it to `frontend/.env.local`:
+
+```env
+NEXT_PUBLIC_API_URL=https://your-ngrok-url.ngrok-free.app/api/v1
+```
+
+> [!NOTE]
+> Kaggle ngrok URLs expire when the session ends. Replace the URL whenever you start a new Kaggle session.
 
 ---
 
 ## API Endpoints
 
-Interactive docs available at **http://localhost:8000/docs**
-
-| Method | Path | Description |
+| Method | Endpoint | Purpose |
 |---|---|---|
-| `POST` | `/api/v1/upload` | Upload files and get an AI summary |
-| `GET` | `/api/v1/summaries` | Retrieve stored summaries |
-| `DELETE` | `/api/v1/summaries/{name}` | Delete a summary by filename |
-| `POST` | `/api/v1/auth/signup` | Create a new account |
-| `POST` | `/api/v1/auth/login` | Sign in and get a JWT token |
-| `GET` | `/api/v1/auth/me` | Get the current authenticated user |
-| `POST` | `/api/v1/chat` | Send a message to the Ducky chatbot |
-| `GET` | `/health` | Server and database health check |
+| `POST` | `/api/v1/upload` | Upload files and generate a summary |
+| `GET` | `/api/v1/summaries` | Retrieve saved summaries |
+| `DELETE` | `/api/v1/summaries/{name}` | Delete a summary |
+| `POST` | `/api/v1/auth/signup` | Create an account |
+| `POST` | `/api/v1/auth/login` | Sign in and receive a JWT |
+| `GET` | `/api/v1/auth/me` | Retrieve the authenticated user |
+| `POST` | `/api/v1/chat` | Send a message to Ducky |
+| `GET` | `/health` | Check server and database health |
 
 ---
 
-## Configuration
+## Supported Files
 
-All settings are environment-driven via `backend/.env`.
-
-| Variable | Default | Description |
-|---|---|---|
-| `MONGO_URI` | `mongodb://localhost:27017` | MongoDB connection string |
-| `DATABASE_NAME` | `easylearn_db` | MongoDB database name |
-| `OLLAMA_URL` | `http://localhost:11434/api/generate` | Ollama API endpoint |
-| `AI_MODEL` | `llama3.2:3b` | Model for summaries |
-| `UPLOAD_DIR` | `uploads` | Temporary upload folder |
-| `MAX_FILE_SIZE_MB` | `20` | Maximum file size in MB |
-| `CHUNK_SIZE` | `4000` | Words per chunk sent to the AI |
-| `SECRET_KEY` | none | JWT signing secret (**required**) |
-
----
-
-## Supported File Types
-
-| Type | Extension | Extraction method |
+| File | Extensions | Extraction |
 |---|---|---|
 | PDF | `.pdf` | pdfplumber |
-| Photo / scan | `.jpg`, `.jpeg` | Tesseract OCR |
+| Photo | `.jpg`, `.jpeg` | Tesseract OCR |
 | Screenshot | `.png` | Tesseract OCR |
 | Web image | `.webp` | Tesseract OCR |
 
-> **Tip:** Handwritten notes work via OCR. Clearer handwriting gives better results.
+Clear, high-resolution handwritten notes produce the best OCR results.
 
 ---
 
 ## Project Structure
 
-<details>
-<summary><b>Click to expand</b></summary>
-
-```
+```text
 EasyLearn/
-├── start.sh                        # One-command startup script
-├── easylearn_kaggle.ipynb          # Kaggle GPU backend notebook
-│
+├── start.sh
+├── easylearn_kaggle.ipynb
 ├── backend/
-│   ├── main.py                     # FastAPI app entry point
-│   ├── config.py                   # All settings (env-driven)
-│   ├── database.py                 # MongoDB connection
-│   ├── .env                        # Your secret config (never commit)
-│   ├── .env.example                # Template for .env
-│   ├── requirements.txt            # Python dependencies
+│   ├── main.py
+│   ├── config.py
+│   ├── database.py
+│   ├── .env.example
+│   ├── requirements.txt
 │   ├── models/
-│   │   └── summary_model.py        # Pydantic data models
 │   ├── routers/
-│   │   ├── summary_router.py       # Upload & summary endpoints
-│   │   ├── auth_router.py          # Signup, login, JWT auth
-│   │   └── chat_router.py          # Ducky AI chat endpoint
+│   │   ├── auth_router.py
+│   │   ├── chat_router.py
+│   │   └── summary_router.py
 │   └── services/
-│       ├── ai_service.py           # Llama 3 + Mistral prompts & calls
-│       ├── chunk_service.py        # Splits text into chunks
-│       ├── image_service.py        # OCR for images
-│       ├── pdf_service.py          # PDF text extraction
-│       └── pipeline_service.py     # Orchestrates everything
-│
+│       ├── ai_service.py
+│       ├── chunk_service.py
+│       ├── image_service.py
+│       ├── pdf_service.py
+│       └── pipeline_service.py
 └── frontend/
     ├── public/
-    │   ├── index.html
-    │   └── mascot/                 # Ducky animations
-    │       ├── idle.gif
-    │       ├── welcome.gif
-    │       ├── processing.gif
-    │       ├── confused.gif
-    │       └── sleeping.png
+    │   └── mascot/
     ├── src/
-    │   ├── index.js
-    │   └── app.js                  # Complete React app
+    │   ├── app.js
+    │   └── index.js
     └── package.json
 ```
 
-</details>
+---
+
+## Configuration Reference
+
+| Variable | Default | Description |
+|---|---|---|
+| `MONGO_URI` | `mongodb://localhost:27017` | MongoDB connection |
+| `DATABASE_NAME` | `easylearn_db` | Database name |
+| `OLLAMA_URL` | `http://localhost:11434/api/generate` | Ollama API endpoint |
+| `AI_MODEL` | `llama3.2:3b` | Summary model |
+| `UPLOAD_DIR` | `uploads` | Temporary file directory |
+| `MAX_FILE_SIZE_MB` | `20` | Maximum upload size |
+| `CHUNK_SIZE` | `4000` | Words per text chunk |
+| `SECRET_KEY` | — | Required JWT signing secret |
 
 ---
 
-## Notes
+## Security and Privacy
 
 > [!IMPORTANT]
-> Never commit your `.env` file to Git. The `venv/` folder is already in `.gitignore`.
+> Never commit `backend/.env`, MongoDB credentials, ngrok tokens, or JWT secrets.
 
-- All AI processing happens locally (or in your own Kaggle session). Your files never go to a third-party AI server.
-- The `uploads/` folder is temporary. Files are deleted after processing.
-- Large PDFs (10+ pages) may take several minutes depending on your hardware.
-- Kaggle sessions time out after ~20 minutes of browser inactivity. Leave the keep-alive cell running while demoing.
+- Uploaded files are deleted after processing.
+- AI runs locally or inside the user's Kaggle session.
+- MongoDB stores extracted summaries, not the original files.
+- Authentication uses JWT tokens.
+- Virtual environments and uploads should remain excluded by `.gitignore`.
+
+---
+
+## Troubleshooting
+
+| Problem | Solution |
+|---|---|
+| Frontend cannot reach the backend | Verify `NEXT_PUBLIC_API_URL` and restart the frontend |
+| Ollama model is missing | Run `ollama pull llama3.2:3b` or `ollama pull mistral:instruct` |
+| MongoDB connection fails | Check `MONGO_URI` and confirm MongoDB is running |
+| OCR returns poor text | Use clearer, higher-resolution images |
+| Kaggle URL stopped working | Start the Kaggle notebook again and update `frontend/.env.local` |
+| Port 3000 or 8000 is busy | Stop the existing process or change the development port |
 
 ---
 
 ## What I Learned
 
-This project was built as a learning exercise in full-stack development with Python, FastAPI, React and local AI models.
+Building EasyLearn covered:
 
-| Area | Skills |
-|---|---|
-| **Backend** | Async Python with FastAPI, REST API design and error handling |
-| **Auth & data** | JWT auth with python-jose and bcrypt, MongoDB with the Motor async driver |
-| **AI** | Local inference with Ollama, Llama 3.2 and Mistral; free GPU inference via Kaggle + ngrok |
-| **Extraction** | PDF parsing with pdfplumber, image OCR with Tesseract and pytesseract |
-| **Frontend** | React component architecture with hooks, dark mode theming with CSS variables, PDF generation from JavaScript |
+- REST API design with FastAPI
+- JWT authentication and async MongoDB
+- PDF parsing and OCR
+- Prompt-driven text summarization
+- Local LLM inference with Ollama
+- GPU-hosted AI through Kaggle
+- React state management and dark mode
+- PDF generation in the browser
+- Full-stack deployment and environment configuration
 
 ---
 
+<div align="center">
+
+Built for learning, studying, and making dense material easier to understand.
+
+**[Live Demo](https://easy-learn-beta.vercel.app)** · **[Report an Issue](https://github.com/manvendrasingh9299-del/EasyLearn/issues)**
+
+</div>
+```
