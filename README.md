@@ -8,7 +8,7 @@
 
 Upload documents, extract knowledge, and review it with summaries, flashcards, quizzes, exam questions, and an AI tutor.
 
-**[Live Demo](https://easy-learn-beta.vercel.app)** · **[Backend API](http://localhost:8000/docs)** · **[Quick Start](#quick-start)**
+ · **[Backend API](http://localhost:8000/docs)** · **[Quick Start](#quick-start)**
 
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Python-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
@@ -360,12 +360,3 @@ Building EasyLearn covered:
 - Full-stack deployment and environment configuration
 
 ---
-
-<div align="center">
-
-Built for learning, studying, and making dense material easier to understand.
-
-**[Live Demo](https://easy-learn-beta.vercel.app)** · **[Report an Issue](https://github.com/manvendrasingh9299-del/EasyLearn/issues)**
-
-</div>
-```
