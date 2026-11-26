@@ -438,8 +438,3 @@ This project was built as a learning exercise in full-stack development with Pyt
 
 ---
 
-<div align="center">
-
-EasyLearn: a full-stack AI study assistant
-
-</div>
